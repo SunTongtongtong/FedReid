@@ -3,9 +3,7 @@
 # Guile Wu and Shaogang Gong
 # 2020
 #
-
-#shitong 2021 0108
-
+# I can
 from __future__ import print_function, division
 import torch
 import numpy as np
