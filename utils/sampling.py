@@ -12,3 +12,4 @@ def partition(len_dataset, num_users):
         all_idxs = list(set(all_idxs) - dict_users[i])
     return dict_users
 
+

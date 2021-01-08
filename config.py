@@ -5,6 +5,7 @@
 import argparse
 import os
 
+
 ######################################################################
 # Options
 # --------
@@ -27,7 +28,7 @@ parser.add_argument('--data_dir_4',type=str, help='path of local client dataset'
     default=os.path.join(os.path.dirname(os.path.abspath(__file__)),'sourceDataset/cuhk03-np/pytorch'))
 
 # Hyper-parameters
-#for testing
+
 parser.add_argument('--batchsize', default=32, type=int, help='batchsize')
 parser.add_argument('--lr_init', default=0.01, type=float, help='initial learning rate')
 parser.add_argument('--frac', type=float, default=1.0, help='the fraction of clients: C')
