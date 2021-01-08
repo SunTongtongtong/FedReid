@@ -52,7 +52,6 @@ class MLP(nn.Module):
         self.classifier = classifier
 
     def forward(self, x):
-        print(x.shape)
         x = self.add_block(x)
         x = self.classifier(x)
         return x
@@ -137,6 +136,7 @@ class MLP_disentangle_glob(nn.Module):
         middle = self.add_block(x)
         # x = self.classifier(middle)
         return middle
+
 
 # Feature embedding network 
 class embedding_net(nn.Module):
