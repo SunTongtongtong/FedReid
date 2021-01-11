@@ -14,7 +14,7 @@ import numpy as np
 
 class myImageFolder(dataset.Dataset):
 
-    def __init__(self, path, transformer,k=4096):
+    def __init__(self, path, transformer,k=4096,mode = 'relax'):
         self.imagefolder = datasets.ImageFolder(path,transformer)
         num_classes = len(self.imagefolder.classes)
         num_samples = len(self.imagefolder.imgs)
@@ -31,7 +31,7 @@ class myImageFolder(dataset.Dataset):
 
         self.cls_positive = [np.asarray(self.cls_positive[i]) for i in range(num_classes)]
         self.cls_negative = [np.asarray(self.cls_negative[i]) for i in range(num_classes)]
-        self.mode = 'relax'  # relax means any positive pair ok, otherwise only the same image are positive pair
+        self.mode = mode  # relax means any positive pair ok, otherwise only the same image are positive pair
         self.k = k
         # pdb.set_trace()
 
@@ -81,10 +81,7 @@ def get_dataset(opt, is_training=True):
         # Local client training data
         local_datasets = []
         #local_datasets.append(datasets.ImageFolder(os.path.join(opt.data_dir_1, 'train'), data_transforms['train']))
-
         local_datasets.append(myImageFolder(os.path.join(opt.data_dir_1, 'train'), data_transforms['train']))
-
-
         local_datasets.append(myImageFolder(os.path.join(opt.data_dir_2, 'train'), data_transforms['train']))
         local_datasets.append(myImageFolder(os.path.join(opt.data_dir_3, 'train'), data_transforms['train']))
         local_datasets.append(myImageFolder(os.path.join(opt.data_dir_4, 'train'), data_transforms['train']))
@@ -98,12 +95,19 @@ def get_dataset(opt, is_training=True):
         # Federated client partition (each client can be partitioned into multiple local users)
         # Here, one user in each client
         dict_users = []
-        dict_users.append(partition(len_dataset=len(local_datasets[0]), num_users=1))
-        dict_users.append(partition(len_dataset=len(local_datasets[1]), num_users=1))
-        dict_users.append(partition(len_dataset=len(local_datasets[2]), num_users=1))
-        dict_users.append(partition(len_dataset=len(local_datasets[3]), num_users=1))
+        dict_users.append(partition(len_dataset=len(local_datasets[0].imagefolder), num_users=1))
+        dict_users.append(partition(len_dataset=len(local_datasets[1].imagefolder), num_users=1))
+        dict_users.append(partition(len_dataset=len(local_datasets[2].imagefolder), num_users=1))
+        dict_users.append(partition(len_dataset=len(local_datasets[3].imagefolder), num_users=1))
 
-        return local_datasets, dict_users, dataloaders_val
+        n_data=[]
+        n_data.append(len(local_datasets[0].imagefolder))
+        n_data.append(len(local_datasets[1].imagefolder))
+        n_data.append(len(local_datasets[2].imagefolder))
+        n_data.append(len(local_datasets[3].imagefolder))
+
+
+        return local_datasets, dict_users, dataloaders_val,n_data
 
     # load testing data
     else:

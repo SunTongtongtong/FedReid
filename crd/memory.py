@@ -21,8 +21,7 @@ class ContrastMemory(nn.Module):
         self.register_buffer('memory_v2', torch.rand(outputSize, inputSize).mul_(2 * stdv).add_(-stdv))
 
     def forward(self, v1, v2, y, idx=None):
-        import pdb
-        pdb.set_trace()
+
         K = int(self.params[0].item())
         T = self.params[1].item()
         Z_v1 = self.params[2].item()

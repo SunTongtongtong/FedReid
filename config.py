@@ -47,5 +47,13 @@ parser.add_argument('--PBT_num', type=int, default=3, help="number of FL block, 
 #for representation disentangle
 parser.add_argument('--disentangle', dest='disEN',action='store_true', default=False,help="set as representation disentangle mode")
 
+#for CRDLoss
+parser.add_argument('--feat_dim', default=128, type=int, help='feature dimension')
+parser.add_argument('--mode', default='relax', type=str, choices=['exact', 'relax'])
+parser.add_argument('--nce_k', default=4096, type=int, help='number of negative samples for NCE')
+parser.add_argument('--nce_t', default=0.07, type=float, help='temperature parameter for softmax')
+parser.add_argument('--nce_m', default=0.5, type=float, help='momentum for non-parametric updates')
+parser.add_argument('--s_dim', default=2048, type=int, help='student dimension')
+parser.add_argument('--t_dim', default=2048, type=int, help='teacher dimension')
 
 opt = parser.parse_args()

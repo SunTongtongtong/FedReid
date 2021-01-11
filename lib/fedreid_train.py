@@ -15,13 +15,17 @@ import os
 from utils.logging import Logger
 from lib.weightAgg import *
 from lib.localUpdate import LocalUpdateLM
+from torch.utils.tensorboard import SummaryWriter
 
-def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_val):
+
+def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_val,n_data):
     # Model save directory
     name = opt.name
     dir_name = os.path.join(opt.logs_dir, name)
     if not os.path.isdir(dir_name):
         os.mkdir(dir_name)
+
+    writer = SummaryWriter('runs/CRDloss_experiment_1')
 
     model_pth = 'model_{}_{}.pth'.format(opt.agg, opt.frac) # saved model
     model_saved = os.path.join(dir_name, model_pth) # model directory
@@ -48,7 +52,7 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
         for idx in idxs_users_selected:
             # local client model initialisation and local dataset partition
             # idxs: each local client only contains one user here
-            local = LocalUpdateLM(args=opt, dataset=local_datasets[idx], idxs=dict_users[idx][0], nround=epoch, user=idx)
+            local = LocalUpdateLM(args=opt, dataset=local_datasets[idx], idxs=dict_users[idx][0], nround=epoch, user=idx,n_data=n_data[idx])
 
             # local client weight update
             w_tmp.append(w_glob) # server model parameters
@@ -73,6 +77,27 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
             # store all local client parameters (some clients are not updated in the randomly selection)
             w_all[idx] = copy.deepcopy(out_dict['params'])
             w_tmp = [] # clear local temporal model parameters
+
+            writer.add_scalar('CRD/client {} local ID loss'.format(idx),
+                              out_dict['ID_local'],
+                              epoch)
+
+            writer.add_scalar('CRD/client {} global ID loss'.format(idx),
+                              out_dict['ID_global'],
+                              epoch)
+
+            writer.add_scalar('CRD/client {} CRD loss'.format(idx),
+                              out_dict['CRDloss'],
+                              epoch)
+
+            writer.add_scalar('CRD/client {} whole loss'.format(idx),
+                              out_dict['loss'],
+                              epoch)
+
+            writer.add_scalar('CRD/client {} accuracy'.format(idx),
+                              out_dict['acc'],
+                              epoch)
+            #add accuracy
 
         # central server model updating 
         if opt.agg == 'avg': # current version  only supports modified federated average strategy

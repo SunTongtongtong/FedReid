@@ -9,7 +9,7 @@ import torch
 import numpy as np
 import time
 
-from lib.model import embedding_net,embedding_disEN_net,embedding_disEN_net_glob
+from lib.model import embedding_net
 from config import opt
 from utils.get_dataset import get_dataset
 from lib.fedreid_train import FedReID_train
@@ -35,11 +35,11 @@ def main(opt):
 
     # Prepare local client datasets
     print('----------Load client datasets----------')
-    local_datasets, dict_users, dataloaders_val  = get_dataset(opt, is_training=True)
+    local_datasets, dict_users, dataloaders_val, n_data  = get_dataset(opt, is_training=True)
 
     num_ids_client = [] # number of training ids in each local client
     for i in range(opt.nusers):
-        num_ids_client.append(len(local_datasets[i].classes))
+        num_ids_client.append(len(local_datasets[i].imagefolder.classes))
 
     # Model initialisation
     model = embedding_net(num_ids_client)  #list length 4=> will build 4 model here=> actually one model with 4 fully connected layers
@@ -53,16 +53,7 @@ def main(opt):
 
     # Model training
     print('----------Training----------')
-    if opt.PBT:
-        model = FedReID_pbt_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_val) # Central model
-    elif opt.disEN:
-        model_exp = embedding_disEN_net(num_ids_client)
-        model = embedding_disEN_net_glob(num_ids_client)
-        model_exp, model = model_exp.cuda(), model.cuda()
-        w_glob = model.cpu().state_dict()  # weights of neurons
-        model = FedReID_disEN_train(model,model_exp, w_glob, opt, local_datasets, dict_users, dataloaders_val)
-    else:
-        model = FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_val) # Central model
+    model = FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_val,n_data) # Central model
 
 if __name__ == '__main__':
     main(opt)
