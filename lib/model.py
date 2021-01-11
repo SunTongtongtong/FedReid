@@ -52,9 +52,9 @@ class MLP(nn.Module):
         self.classifier = classifier
 
     def forward(self, x):
-        x = self.add_block(x)
-        x = self.classifier(x)
-        return x
+        feat = self.add_block(x)
+        x = self.classifier(feat)
+        return x,feat
 
 # Feature embedding network
 class embedding_net(nn.Module):
@@ -80,7 +80,7 @@ class embedding_net(nn.Module):
         x = self.model.layer3(x)
         x = self.model.layer4(x)
         x = self.model.avgpool(x)
-        feat = x.view(x.size(0), x.size(1)) #feat size: (batchsize, 2048)
+        x = x.view(x.size(0), x.size(1)) #feat size: (batchsize, 2048)
         # print('x shape',x.size())
         # import pdb
         # pdb.set_trace()
@@ -88,7 +88,7 @@ class embedding_net(nn.Module):
         assert idx_client <= self.num_client-1
         client_name = 'classifier_' + str(idx_client+1)
         mapping_net = getattr(self, client_name)
-        x = mapping_net(feat)
+        x,feat = mapping_net(x)
         return x,feat
 
 

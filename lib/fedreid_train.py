@@ -25,11 +25,11 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
     if not os.path.isdir(dir_name):
         os.mkdir(dir_name)
 
-    writer = SummaryWriter('runs/CRDloss_experiment_1')
+    writer = SummaryWriter('runs/CRDloss_experiment_2')
 
     model_pth = 'model_{}_{}.pth'.format(opt.agg, opt.frac) # saved model
     model_saved = os.path.join(dir_name, model_pth) # model directory
-    #sys.stdout = Logger(os.path.join(opt.logs_dir, 'log' + time.strftime(".%m_%d_%H:%M:%S") + '.txt')) # training log
+    sys.stdout = Logger(os.path.join(opt.logs_dir, 'log' + time.strftime(".%m_%d_%H:%M:%S") + '.txt')) # training log
 
     since = time.time() # training start time
     num_epochs = opt.global_ep # global communication epochs
