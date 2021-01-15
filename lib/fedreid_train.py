@@ -25,9 +25,9 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
     if not os.path.isdir(dir_name):
         os.mkdir(dir_name)
 
-    writer = SummaryWriter('runs/CRDloss_experiment_2')
+    writer = SummaryWriter('runs/CRDloss_experiment_4_CRD0.5_w/KL')
 
-    model_pth = 'model_{}_{}.pth'.format(opt.agg, opt.frac) # saved model
+    model_pth = 'model_KL_CRDloss_size512_{}_{}.pth'.format(opt.agg, opt.frac) # saved model
     model_saved = os.path.join(dir_name, model_pth) # model directory
     sys.stdout = Logger(os.path.join(opt.logs_dir, 'log' + time.strftime(".%m_%d_%H:%M:%S") + '.txt')) # training log
 
@@ -97,7 +97,11 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
             writer.add_scalar('CRD/client {} accuracy'.format(idx),
                               out_dict['acc'],
                               epoch)
-            #add accuracy
+    
+            writer.add_scalar('CRD/client {} KL loss'.format(idx),
+                              out_dict['KL_loss'],
+                              epoch)
+        #add accuracy
 
         # central server model updating 
         if opt.agg == 'avg': # current version  only supports modified federated average strategy

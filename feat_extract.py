@@ -12,7 +12,7 @@ from utils.load_network import load_network
 from config_test import opt
 from evaluation.get_id import get_id
 from evaluation.eval_feat_ext import eval_feat_ext#, fliplr
-from lib.model import embedding_net,embedding_disEN_net,embedding_disEN_net_glob
+from lib.model import embedding_net #,embedding_disEN_net,embedding_disEN_net_glob
 
 def main(opt):
     # Set GPU  
@@ -44,8 +44,8 @@ def main(opt):
 
     print('----------Extracting features----------')
     # Model initialisation, we use four local client in current version (Duke, Market, MSMT, CUHK03)
-    # model = embedding_net([702, 751, 1041, 767])
-    model = embedding_disEN_net_glob([702, 751, 1041, 767])
+    model = embedding_net([702, 751, 1041, 767])
+    #model = embedding_disEN_net_glob([702, 751, 1041, 767])
     model = load_network(model, opt, gpu_ids) # Model restoration from saved model
     # Remove the mapping network and set to embedding feature extraction
     model = embedding_net_test(model)

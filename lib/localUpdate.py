@@ -130,7 +130,7 @@ class LocalUpdateLM(object):
                 loss_kl = self.criterion_kl(outputs, outputs_sv, T=self.args.T) # server supervision loss
                 loss_crd = self.criterion_crd(feat,feat_sv,index, contrast_idx)
 
-                loss = loss_local + loss_sv + loss_crd # optimisation objective
+                loss = loss_local + loss_sv + 0.5*loss_crd + loss_kl # optimisation objective
 
                 # backward
                 loss.backward()
@@ -161,7 +161,7 @@ class LocalUpdateLM(object):
         return{'params': model.cpu().state_dict(),
                'loss': sum(list_loss) / len(list_loss),
                'KL_loss': sum(KL_loss_list) / len(KL_loss_list),
-               'CRDloss':sum(CRDLoss_list)/len(CRDLoss_list),
+               'CRDloss':sum(CRDLoss_list)*0.5/len(CRDLoss_list),
                'ID_local':sum(IDloss_local)/len(IDloss_local),
                'ID_global':sum(IDloss_sv)/len(IDloss_sv),
                'acc':epoch_acc}
