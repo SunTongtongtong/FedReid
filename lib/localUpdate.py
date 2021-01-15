@@ -43,6 +43,9 @@ class LocalUpdateLM(object):
         args.n_data = n_data
         self.criterion_crd = CRDLoss(args).cuda()
 
+        #shitong
+        self.softmax = nn.Softmax()
+
     # updating local model parameters
     def update_weights(self, model, cur_epoch, idx_client, model_sv):
         # mapping network parameters
@@ -129,9 +132,11 @@ class LocalUpdateLM(object):
                 loss_sv = self.criterion_ce(outputs_sv, labels) # copy central model loss
                 loss_kl = self.criterion_kl(outputs, outputs_sv, T=self.args.T) # server supervision loss
                 loss_crd = self.criterion_crd(feat,feat_sv,index, contrast_idx)
-
-                loss = loss_local + loss_sv + 0.5*loss_crd + loss_kl # optimisation objective
-
+#                import pdb
+#                pdb.set_trace()
+                #loss = loss_local + loss_sv + 0.5*loss_crd + loss_kl # optimisation objective
+                loss = self.softmax(torch.cat([torch.unsqueeze(loss_local,0),torch.unsqueeze(loss_sv,0),loss_crd,torch.unsqueeze(loss_kl,0)]))
+                loss = torch.sum(loss)
                 # backward
                 loss.backward()
                 optimizer.step()

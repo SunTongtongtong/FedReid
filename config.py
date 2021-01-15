@@ -53,7 +53,9 @@ parser.add_argument('--mode', default='relax', type=str, choices=['exact', 'rela
 parser.add_argument('--nce_k', default=4096, type=int, help='number of negative samples for NCE')
 parser.add_argument('--nce_t', default=0.07, type=float, help='temperature parameter for softmax')
 parser.add_argument('--nce_m', default=0.5, type=float, help='momentum for non-parametric updates')
-parser.add_argument('--s_dim', default=2048, type=int, help='student dimension')
-parser.add_argument('--t_dim', default=2048, type=int, help='teacher dimension')
+parser.add_argument('--s_dim', default=512, type=int, help='student dimension')
+parser.add_argument('--t_dim', default=512, type=int, help='teacher dimension')
+parser.add_argument('--exp_name', default='new_experiment', type=str,help='Name of the experiment')
+
 
 opt = parser.parse_args()
