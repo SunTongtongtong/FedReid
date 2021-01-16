@@ -30,7 +30,6 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
     model_pth = 'model_{}_{}.pth'.format(opt.exp_name,time.strftime(".%m_%d_%H:%M:%S")) # saved model
     model_saved = os.path.join(dir_name, model_pth) # model directory
     sys.stdout = Logger(os.path.join(opt.logs_dir, 'log' + time.strftime(".%m_%d_%H:%M:%S") + '.txt')) # training log
-    
 
     since = time.time() # training start time
     num_epochs = opt.global_ep # global communication epochs
@@ -102,6 +101,19 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
             writer.add_scalar('CRD/client {} KL loss'.format(idx),
                               out_dict['KL_loss'],
                               epoch)
+
+            writer.add_scalar('CRD/client {} lv0_local Loss weight'.format(idx),
+                              out_dict['lv0_localLossweight'],
+                              epoch)
+
+            writer.add_scalar('CRD/client {} lv1_svLossWeight'.format(idx),
+                              out_dict['lv1_svLossWeight'],
+                              epoch)
+
+            writer.add_scalar('CRD/client {} lv2_CRDloss'.format(idx),
+                              out_dict['lv2_CRDloss'],
+                              epoch)
+
         #add accuracy
 
         # central server model updating 

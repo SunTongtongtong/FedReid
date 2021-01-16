@@ -10,6 +10,7 @@ from torch.autograd import Variable
 from torch.optim import lr_scheduler
 from lib.kl_loss import KLLoss
 from crd.criterion import CRDLoss
+from lib.MergeLoss import MergeLoss
 
 
 import time
@@ -45,7 +46,7 @@ class LocalUpdateLM(object):
 
         #shitong
         self.softmax = nn.Softmax()
-
+        self.merge = MergeLoss(3).cuda()  #todo: merge three loss here
     # updating local model parameters
     def update_weights(self, model, cur_epoch, idx_client, model_sv):
         # mapping network parameters
@@ -66,7 +67,8 @@ class LocalUpdateLM(object):
         # optimiser setting
         # global LR sheduler, hyperparameters can be fine-tuned
         # lr_init: 0.01 for embedding network and 0.1 for mapping network
-        decay_factor = 1.0 if cur_epoch < 20 else 0.1
+        #decay_factor = 1.0 if cur_epoch < 20 else 0.1
+        decay_factor = 1.0
        #shitong
         args=self.args
         optimizer = optim.SGD([
@@ -82,7 +84,11 @@ class LocalUpdateLM(object):
              {'params': model_sv.classifier_2.parameters(), 'lr': args.lr_init*10*decay_factor},
              {'params': model_sv.classifier_3.parameters(), 'lr': args.lr_init*10*decay_factor},
              {'params': model_sv.classifier_4.parameters(), 'lr': args.lr_init*10*decay_factor},
+             {'params': self.merge.lv_0, 'lr': args.lr_init*10*decay_factor},
+             {'params': self.merge.lv_1, 'lr': args.lr_init*10*decay_factor},
+             {'params': self.merge.lv_2, 'lr': args.lr_init*10*decay_factor}
          ], weight_decay=5e-4, momentum=0.9, nesterov=True)
+
 
         # local LR scheduler
         scheduler = lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
@@ -93,6 +99,10 @@ class LocalUpdateLM(object):
         CRDLoss_list=[]
         IDloss_local=[]
         IDloss_sv=[]
+
+        lv0_list=[]
+        lv1_list=[]
+        lv2_list=[]
 
         for epoch in range(self.args.local_ep):
             print('Local Training Epoch {}/{}'.format(epoch+1, self.args.local_ep))
@@ -135,8 +145,10 @@ class LocalUpdateLM(object):
 #                import pdb
 #                pdb.set_trace()
                 #loss = loss_local + loss_sv + 0.5*loss_crd + loss_kl # optimisation objective
-                loss = self.softmax(torch.cat([torch.unsqueeze(loss_local,0),torch.unsqueeze(loss_sv,0),loss_crd,torch.unsqueeze(loss_kl,0)]))
-                loss = torch.sum(loss)
+                # loss = self.softmax(torch.cat([torch.unsqueeze(loss_local,0),torch.unsqueeze(loss_sv,0),loss_crd,torch.unsqueeze(loss_kl,0)]))
+                # loss = torch.sum(loss)
+
+                loss = self.merge([loss_local,loss_sv,torch.squeeze(loss_crd)])
                 # backward
                 loss.backward()
                 optimizer.step()
@@ -151,6 +163,11 @@ class LocalUpdateLM(object):
                 CRDLoss_list.append(loss_crd.item())
                 IDloss_local.append(loss_local.item())
                 IDloss_sv.append(loss_sv.item())
+
+                lv0,lv1,lv2 = self.merge.get_data()
+                lv0_list.append(lv0)
+                lv1_list.append(lv1)
+                lv2_list.append(lv2)
 
             # compute accuracy and loss of current epoch
             epoch_loss = running_loss / (len(self.data_loader)*self.args.batchsize)
@@ -169,7 +186,11 @@ class LocalUpdateLM(object):
                'CRDloss':sum(CRDLoss_list)*0.5/len(CRDLoss_list),
                'ID_local':sum(IDloss_local)/len(IDloss_local),
                'ID_global':sum(IDloss_sv)/len(IDloss_sv),
-               'acc':epoch_acc}
+               'acc':epoch_acc,
+               'lv0_localLossweight':sum(lv0_list)/len(lv0_list),
+               'lv1_svLossWeight': sum(lv1_list) / len(lv1_list),
+               'lv2_CRDloss weight': sum(lv2_list) / len(lv2_list)
+               }
 
         
     # evaluating current model
