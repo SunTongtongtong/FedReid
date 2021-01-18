@@ -57,5 +57,4 @@ parser.add_argument('--s_dim', default=512, type=int, help='student dimension')
 parser.add_argument('--t_dim', default=512, type=int, help='teacher dimension')
 parser.add_argument('--exp_name', default='new_experiment', type=str,help='Name of the experiment')
 
-
 opt = parser.parse_args()

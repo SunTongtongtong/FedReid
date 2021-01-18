@@ -111,7 +111,7 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
                               epoch)
 
             writer.add_scalar('CRD/client {} lv2_CRDloss'.format(idx),
-                              out_dict['lv2_CRDloss'],
+                              out_dict['lv2_CRDlossWeight'],
                               epoch)
 
         #add accuracy

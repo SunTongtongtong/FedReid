@@ -58,7 +58,6 @@ class LocalUpdateLM(object):
                             + list(map(id, model_sv.classifier_2.parameters())) + list(map(id, model_sv.classifier_3.parameters() ))\
                             + list(map(id, model_sv.classifier_4.parameters()))
 
-
         # feature embedding network parameters
         # shitong filter: first parameter: return True/False; filter will choose from the second parameter which satisfy the first
         base_params = filter(lambda p: id(p) not in ignored_params, model.parameters())
@@ -84,11 +83,15 @@ class LocalUpdateLM(object):
              {'params': model_sv.classifier_2.parameters(), 'lr': args.lr_init*10*decay_factor},
              {'params': model_sv.classifier_3.parameters(), 'lr': args.lr_init*10*decay_factor},
              {'params': model_sv.classifier_4.parameters(), 'lr': args.lr_init*10*decay_factor},
-             {'params': self.merge.lv_0, 'lr': args.lr_init*10*decay_factor},
-             {'params': self.merge.lv_1, 'lr': args.lr_init*10*decay_factor},
-             {'params': self.merge.lv_2, 'lr': args.lr_init*10*decay_factor}
+             {'params': self.merge.log_var_0, 'lr': args.lr_init*10*decay_factor},
+             {'params': self.merge.log_var_1, 'lr': args.lr_init*10*decay_factor},
+             {'params': self.merge.log_var_2, 'lr': args.lr_init*10*decay_factor}
          ], weight_decay=5e-4, momentum=0.9, nesterov=True)
 
+
+        #params = ([p for p in model.parameters()] + [self.merge.log_var_0] + [self.merge.log_var_1])
+        # print('====>self.lv0:{},lv1:{}'.format(self.merge.log_var_0,self.merge.log_var_1))
+        # log_var_1# optimizer = optim.Adam(params)
 
         # local LR scheduler
         scheduler = lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
@@ -189,7 +192,7 @@ class LocalUpdateLM(object):
                'acc':epoch_acc,
                'lv0_localLossweight':sum(lv0_list)/len(lv0_list),
                'lv1_svLossWeight': sum(lv1_list) / len(lv1_list),
-               'lv2_CRDloss weight': sum(lv2_list) / len(lv2_list)
+               'lv2_CRDlossWeight': sum(lv2_list) / len(lv2_list)
                }
 
         
