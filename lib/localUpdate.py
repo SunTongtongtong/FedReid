@@ -83,10 +83,11 @@ class LocalUpdateLM(object):
              {'params': model_sv.classifier_2.parameters(), 'lr': args.lr_init*10*decay_factor},
              {'params': model_sv.classifier_3.parameters(), 'lr': args.lr_init*10*decay_factor},
              {'params': model_sv.classifier_4.parameters(), 'lr': args.lr_init*10*decay_factor},
-             {'params': self.merge.log_var_0, 'lr': args.lr_init*10*decay_factor},
-             {'params': self.merge.log_var_1, 'lr': args.lr_init*10*decay_factor},
-             {'params': self.merge.log_var_2, 'lr': args.lr_init*10*decay_factor}
+             {'params': model.mergeloss.log_var_0, 'lr': args.lr_init*10*decay_factor},
+             {'params': model.mergeloss.log_var_1, 'lr': args.lr_init*10*decay_factor},
+             {'params': model.mergeloss.log_var_2, 'lr': args.lr_init*10*decay_factor}
          ], weight_decay=5e-4, momentum=0.9, nesterov=True)
+
 
 
         #params = ([p for p in model.parameters()] + [self.merge.log_var_0] + [self.merge.log_var_1])
@@ -145,13 +146,13 @@ class LocalUpdateLM(object):
                 loss_sv = self.criterion_ce(outputs_sv, labels) # copy central model loss
                 loss_kl = self.criterion_kl(outputs, outputs_sv, T=self.args.T) # server supervision loss
                 loss_crd = self.criterion_crd(feat,feat_sv,index, contrast_idx)
-#                import pdb
-#                pdb.set_trace()
+
                 #loss = loss_local + loss_sv + 0.5*loss_crd + loss_kl # optimisation objective
                 # loss = self.softmax(torch.cat([torch.unsqueeze(loss_local,0),torch.unsqueeze(loss_sv,0),loss_crd,torch.unsqueeze(loss_kl,0)]))
                 # loss = torch.sum(loss)
 
-                loss = self.merge([loss_local,loss_sv,torch.squeeze(loss_crd)])
+                #loss = self.merge([loss_local,loss_sv,torch.squeeze(loss_crd)])
+                loss = model.mergeloss([loss_local,loss_sv,torch.squeeze(loss_crd)])
                 # backward
                 loss.backward()
                 optimizer.step()
@@ -167,7 +168,7 @@ class LocalUpdateLM(object):
                 IDloss_local.append(loss_local.item())
                 IDloss_sv.append(loss_sv.item())
 
-                lv0,lv1,lv2 = self.merge.get_data()
+                lv0,lv1,lv2 = model.mergeloss.get_data()
                 lv0_list.append(lv0)
                 lv1_list.append(lv1)
                 lv2_list.append(lv2)

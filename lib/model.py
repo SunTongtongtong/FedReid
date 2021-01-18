@@ -5,6 +5,7 @@
 import torch.nn as nn
 from torch.nn import init
 from torchvision import models
+from lib.MergeLoss import MergeLoss
 from torch.autograd import Variable
 from torch.nn import functional as F
 import torch
@@ -69,6 +70,8 @@ class embedding_net(nn.Module):
         for i in range(len(num_ids_client)):
             name = 'classifier_'+str(i+1)
             setattr(self, name, MLP(feat_dim, num_ids_client[i]))
+
+        self.mergeloss = MergeLoss(3)
 
     def forward(self, x, idx_client=0):
         x = self.model.conv1(x)

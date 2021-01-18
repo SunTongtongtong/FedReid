@@ -6,7 +6,7 @@ import torch
 import os
 
 def load_network(network, opt, gpu_ids):
-    model_pth = 'model_{}_{}.pth'.format(opt.agg, opt.frac) # saved model
+    model_pth = 'model_{}.pth'.format(opt.model) # saved model
     name = opt.name
     dir_name = os.path.join(opt.logs_dir, name)
     save_path = os.path.join(dir_name, model_pth)
