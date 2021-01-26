@@ -23,9 +23,8 @@ class MergeLoss(nn.Module):
         return torch.mean(loss)
 
     def get_data(self):
-        print('==>',self.log_var_0,self.log_var_1,self.log_var_2)
-        print('exp result ==>',torch.exp(-self.log_var_0),torch.exp(-self.log_var_1),torch.exp(-self.log_var_2))
-
+        # print('==>',self.log_var_0,self.log_var_1,self.log_var_2)
+        # print('exp result ==>',torch.exp(-self.log_var_0),torch.exp(-self.log_var_1),torch.exp(-self.log_var_2))
         return torch.exp(-self.log_var_0),torch.exp(-self.log_var_1),torch.exp(-self.log_var_2)
 
 
