@@ -18,7 +18,6 @@ def weights_aggregate(w, dp, alpha_mu, idx_client, is_local,kl_loss_locals=[]):
     w[0]->global
     w[1]->local->expert
     """
-
     if len(kl_loss_locals)==0:
         w_agg = copy.deepcopy(w[0]) # initial the aggregated parameters
     else:

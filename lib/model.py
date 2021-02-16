@@ -12,7 +12,6 @@ import torch
 # Weight initialisation
 def weights_init_kaiming(m):
     classname = m.__class__.__name__
-
     if classname.find('Conv') != -1:
         init.kaiming_normal_(m.weight.data, a=0, mode='fan_in')
     elif classname.find('Linear') != -1:
@@ -59,7 +58,7 @@ class MLP(nn.Module):
 
 
 class MLP_disentangle_exp(nn.Module):
-    def __init__(self, input_dim, class_num, dropout=True, relu=True, num_bottleneck=512):
+    def __init__(self, input_dim, class_num, dropout=True, relu=True, num_bottleneck=1024):
         super(MLP_disentangle_exp, self).__init__()
 
         add_block=[] #global representation
@@ -73,7 +72,7 @@ class MLP_disentangle_exp(nn.Module):
         add_block.apply(weights_init_kaiming)
         self.add_block = add_block
 
-        add_block_local=[] #global representation
+        add_block_local=[] #local representation
         add_block_local += [nn.Linear(input_dim, num_bottleneck)]
         add_block_local += [nn.BatchNorm1d(num_bottleneck)]
         if relu:
@@ -84,23 +83,23 @@ class MLP_disentangle_exp(nn.Module):
         add_block_local.apply(weights_init_kaiming)
         self.add_block_local = add_block_local
 
-        classifier = []
-        classifier += [nn.Linear(num_bottleneck*2, class_num)]
-        classifier = nn.Sequential(*classifier)
-        classifier.apply(weights_init_classifier)
-        self.classifier = classifier
+
+        reconstructor = []
+        reconstructor += [nn.Linear(num_bottleneck*2, num_bottleneck*2)]
+        reconstructor = nn.Sequential(*reconstructor)
+        reconstructor.apply(weights_init_classifier)
+        self.reconstructor = reconstructor
 
     def forward(self, x):
         local_r = self.add_block_local(x)
-        global_r = self.add_block(x)
-
+        global_r = self.add_block(x) # 1024 dimension
         # local_r = self.dropout(self.relu(self.bn1(self.fc1(x))))
         # global_r = self.dropout(self.relu(self.bn2(self.fc2(x))))
 
         # change to concat the entangled representation instead of sum of them
         x = torch.cat((local_r,global_r),1)
         #x = local_r + global_r
-        x = self.classifier(x)
+        x = self.reconstructor(x)
         return x, global_r
 
 
@@ -111,16 +110,16 @@ class MLP_disentangle_exp(nn.Module):
         nn.init.constant_(fc.bias, 0.)
 
 class MLP_disentangle_glob(nn.Module):
-    def __init__(self, input_dim, class_num, dropout=True, relu=True, num_bottleneck=512):
+    def __init__(self, input_dim, class_num, dropout=True, relu=True, num_bottleneck=1024):
         super(MLP_disentangle_glob, self).__init__()
 
         add_block = []
         add_block += [nn.Linear(input_dim, num_bottleneck)]
         add_block += [nn.BatchNorm1d(num_bottleneck)]
-        # if relu:
-        #     add_block += [nn.LeakyReLU(0.1)]
-        # if dropout:
-        #     add_block += [nn.Dropout(p=0.5)]
+        if relu:
+            add_block += [nn.LeakyReLU(0.1)]
+        if dropout:
+            add_block += [nn.Dropout(p=0.5)]
         add_block = nn.Sequential(*add_block)
         add_block.apply(weights_init_kaiming)
 
@@ -168,14 +167,14 @@ class embedding_net(nn.Module):
         client_name = 'classifier_' + str(idx_client+1)
         mapping_net = getattr(self, client_name)
         x = mapping_net(x)
-
+        print(x.shape)
         return x
 
 
 # Feature embedding network
-class embedding_disEN_net(nn.Module):
+class embedding_disEN_exp(nn.Module):
     def __init__(self, num_ids_client, feat_dim=2048):
-        super(embedding_disEN_net, self).__init__()
+        super(embedding_disEN_exp, self).__init__()
         model_backbone = models.resnet50(pretrained=True)
         model_backbone.avgpool = nn.AdaptiveAvgPool2d((1,1))
         self.model = model_backbone
@@ -195,7 +194,11 @@ class embedding_disEN_net(nn.Module):
         x = self.model.layer2(x)
         x = self.model.layer3(x)
         x = self.model.layer4(x)
+
         x = self.model.avgpool(x)
+        # print(x.shape)
+        # import pdb
+        # pdb.set_trace()
         x = x.view(x.size(0), x.size(1))
 
         assert idx_client <= self.num_client-1
@@ -206,9 +209,9 @@ class embedding_disEN_net(nn.Module):
 
 
 # Feature embedding network
-class embedding_disEN_net_glob(nn.Module):
+class embedding_disEN_glob(nn.Module):
     def __init__(self, num_ids_client, feat_dim=2048):
-        super(embedding_disEN_net_glob, self).__init__()
+        super(embedding_disEN_glob, self).__init__()
         model_backbone = models.resnet50(pretrained=True)
         model_backbone.avgpool = nn.AdaptiveAvgPool2d((1,1))
         self.model = model_backbone

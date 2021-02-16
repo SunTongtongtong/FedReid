@@ -9,7 +9,7 @@ import torch
 import numpy as np
 import time
 
-from lib.model import embedding_net,embedding_disEN_net,embedding_disEN_net_glob
+from lib.model import embedding_net,embedding_disEN_exp,embedding_disEN_glob
 from config import opt
 from utils.get_dataset import get_dataset
 from lib.fedreid_train import FedReID_train
@@ -56,8 +56,8 @@ def main(opt):
     if opt.PBT:
         model = FedReID_pbt_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_val) # Central model
     elif opt.disEN:
-        model_exp = embedding_disEN_net(num_ids_client)
-        model = embedding_disEN_net_glob(num_ids_client)
+        model_exp = embedding_disEN_exp(num_ids_client)
+        model = embedding_disEN_glob(num_ids_client)
         model_exp, model = model_exp.cuda(), model.cuda()
         w_glob = model.cpu().state_dict()  # weights of neurons
         model = FedReID_disEN_train(model,model_exp, w_glob, opt, local_datasets, dict_users, dataloaders_val)
