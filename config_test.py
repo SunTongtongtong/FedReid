@@ -23,4 +23,8 @@ parser.add_argument('--name',default='FedReID', type=str, help='Model Name')
 parser.add_argument('--logs_dir', type=str, help='path of logs',
     default=os.path.join(os.path.dirname(os.path.abspath(__file__)),'model_save'))
 
+
+parser.add_argument('--model_name',default='FedReID', type=str, help='Model Name')
+
+
 opt = parser.parse_args()

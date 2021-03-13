@@ -46,5 +46,64 @@ parser.add_argument('--PBT_num', type=int, default=3, help="number of FL block, 
 #for representation disentangle
 parser.add_argument('--disentangle', dest='disEN',action='store_true', default=False,help="set as representation disentangle mode")
 
+#for SNR
+parser.add_argument('--CBAM', action='store_true',
+                    help="use channel and spatial attention to separate")
+parser.add_argument('--CBAM-S', action='store_true',
+                    help="only use spatial attention to separate")
+parser.add_argument('--C-S-att-parallel', action='store_true',
+                    help="use spatial attention and channel attention in parallel to separate")
+parser.add_argument('--pool-conv', action='store_true',
+                    help="use pooling and 1*1conv embedding to compute distance")
+parser.add_argument('--ratio', type=int, default=16,
+                    help='control the reduction of channel attention')
+parser.add_argument('--label-smooth', action='store_true',
+                    help="use label smoothing regularizer in cross entropy loss")
+parser.add_argument('--margin', type=float, default=0.3,
+                    help="margin for triplet loss")
 
+parser.add_argument('--lambda-xent', type=float, default=1,
+                    help="weight to balance cross entropy loss")
+parser.add_argument('--lambda-htri', type=float, default=1,
+                    help="weight to balance hard triplet loss")
+
+parser.add_argument('--lambda-inner', type=float, default=1,
+                    help="weight to balance inner hard triplet loss")
+parser.add_argument('--layer1-inner', type=float, default=1,
+                    help="weight to decide which layer to add inner hard triplet loss")
+parser.add_argument('--layer2-inner', type=float, default=1,
+                    help="weight to decide which layer to add inner hard triplet loss")
+parser.add_argument('--layer3-inner', type=float, default=1,
+                    help="weight to decide which layer to add inner hard triplet loss")
+parser.add_argument('--layer4-inner', type=float, default=1,
+                    help="weight to decide which layer to add inner hard triplet loss")
+parser.add_argument('--layer1-sr-mutual', type=float, default=1,
+                    help="weight to decide which layer to add inner hard triplet loss")
+parser.add_argument('--layer2-sr-mutual', type=float, default=1,
+                    help="weight to decide which layer to add inner hard triplet loss")
+parser.add_argument('--layer3-sr-mutual', type=float, default=1,
+                    help="weight to decide which layer to add inner hard triplet loss")
+parser.add_argument('--layer4-sr-mutual', type=float, default=1,
+                    help="weight to decide which layer to add inner hard triplet loss")
+
+parser.add_argument('--only-P', action='store_true',
+                    help="only use positive to constrain")
+parser.add_argument('--only-N', action='store_true',
+                    help="only use negative to constrain")
+parser.add_argument('--only-Sr', action='store_true',
+                    help="don't use the comparison technique to constrain")
+parser.add_argument('--only-Sr-type2', action='store_true',
+                    help="don't use the comparison technique to constrain, softplus version")
+parser.add_argument('--Vis_actMap', action='store_true',
+                    help="Visualize feature maps")
+parser.add_argument('--Vis_selective_weights', action='store_true',
+                    help="Vis_selective_Weights")
+parser.add_argument('--Vis_KLMap', action='store_true',
+                    help="Visualize KL divergence feature maps")
+parser.add_argument('--Vis_tSNEMap', action='store_true',
+                    help="Visualize tSNE feature maps")
+parser.add_argument('--Vis_final_reid_vector_tSNE', action='store_true',
+                    help="Visualize final reid_vector tSNE feature maps")
+parser.add_argument('--Vis_hist_threshold', action='store_true',
+                    help="Visualize the histogram of TP&TN, and decide the suitable threshold for real-world application")
 opt = parser.parse_args()

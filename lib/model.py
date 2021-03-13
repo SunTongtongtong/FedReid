@@ -8,6 +8,7 @@ from torchvision import models
 from torch.autograd import Variable
 from torch.nn import functional as F
 import torch
+from SNR.resnet_SNR import resnet50_SNR
 
 # Weight initialisation
 def weights_init_kaiming(m):
@@ -52,56 +53,9 @@ class MLP(nn.Module):
         self.classifier = classifier
 
     def forward(self, x):
-        print(x.shape)
         x = self.add_block(x)
         x = self.classifier(x)
         return x
-
-
-class MLP_disentangle_exp(nn.Module):
-    def __init__(self, input_dim, class_num, dropout=True, relu=True, num_bottleneck=512):
-        super(MLP_disentangle_exp, self).__init__()
-
-        add_block=[] #global representation
-        add_block += [nn.Linear(input_dim, num_bottleneck)]
-        add_block += [nn.BatchNorm1d(num_bottleneck)]
-        if relu:
-            add_block += [nn.LeakyReLU(0.1)]
-        if dropout:
-            add_block += [nn.Dropout(p=0.5)]
-        add_block = nn.Sequential(*add_block)
-        add_block.apply(weights_init_kaiming)
-        self.add_block = add_block
-
-        add_block_local=[] #global representation
-        add_block_local += [nn.Linear(input_dim, num_bottleneck)]
-        add_block_local += [nn.BatchNorm1d(num_bottleneck)]
-        if relu:
-            add_block_local += [nn.LeakyReLU(0.1)]
-        if dropout:
-            add_block_local += [nn.Dropout(p=0.5)]
-        add_block_local = nn.Sequential(*add_block_local)
-        add_block_local.apply(weights_init_kaiming)
-        self.add_block_local = add_block_local
-
-        classifier = []
-        classifier += [nn.Linear(num_bottleneck*2, class_num)]
-        classifier = nn.Sequential(*classifier)
-        classifier.apply(weights_init_classifier)
-        self.classifier = classifier
-
-    def forward(self, x):
-        local_r = self.add_block_local(x)
-        global_r = self.add_block(x)
-
-        # local_r = self.dropout(self.relu(self.bn1(self.fc1(x))))
-        # global_r = self.dropout(self.relu(self.bn2(self.fc2(x))))
-
-        # change to concat the entangled representation instead of sum of them
-        x = torch.cat((local_r,global_r),1)
-        #x = local_r + global_r
-        x = self.classifier(x)
-        return x, global_r
 
 
     @staticmethod
@@ -110,39 +64,12 @@ class MLP_disentangle_exp(nn.Module):
         #nn.init.normal_(fc.weight, std=0.001)
         nn.init.constant_(fc.bias, 0.)
 
-class MLP_disentangle_glob(nn.Module):
-    def __init__(self, input_dim, class_num, dropout=True, relu=True, num_bottleneck=512):
-        super(MLP_disentangle_glob, self).__init__()
-
-        add_block = []
-        add_block += [nn.Linear(input_dim, num_bottleneck)]
-        add_block += [nn.BatchNorm1d(num_bottleneck)]
-        # if relu:
-        #     add_block += [nn.LeakyReLU(0.1)]
-        # if dropout:
-        #     add_block += [nn.Dropout(p=0.5)]
-        add_block = nn.Sequential(*add_block)
-        add_block.apply(weights_init_kaiming)
-
-        # classifier = []
-        # classifier += [nn.Linear(num_bottleneck, class_num)]
-        # classifier = nn.Sequential(*classifier)
-        # classifier.apply(weights_init_classifier)
-
-        self.add_block = add_block
-        # self.classifier = classifier
-
-    def forward(self, x):
-        # print(x.shape)
-        middle = self.add_block(x)
-        # x = self.classifier(middle)
-        return middle
 
 # Feature embedding network 
 class embedding_net(nn.Module):
     def __init__(self, num_ids_client, feat_dim=2048):
         super(embedding_net, self).__init__()
-        model_backbone = models.resnet50(pretrained=True)
+        model_backbone = resnet50_SNR(loss={'xent', 'htri'})
         model_backbone.avgpool = nn.AdaptiveAvgPool2d((1,1))
         self.model = model_backbone
         self.num_client = len(num_ids_client)
@@ -153,90 +80,35 @@ class embedding_net(nn.Module):
             setattr(self, name, MLP(feat_dim, num_ids_client[i]))
 
     def forward(self, x, idx_client=0):
-        x = self.model.conv1(x)
-        x = self.model.bn1(x)
-        x = self.model.relu(x)
-        x = self.model.maxpool(x)
-        x = self.model.layer1(x)
-        x = self.model.layer2(x)
-        x = self.model.layer3(x)
-        x = self.model.layer4(x)
-        x = self.model.avgpool(x)
-        x = x.view(x.size(0), x.size(1))
-
-        assert idx_client <= self.num_client-1
-        client_name = 'classifier_' + str(idx_client+1)
-        mapping_net = getattr(self, client_name)
-        x = mapping_net(x)
-
-        return x
-
-
-# Feature embedding network
-class embedding_disEN_net(nn.Module):
-    def __init__(self, num_ids_client, feat_dim=2048):
-        super(embedding_disEN_net, self).__init__()
-        model_backbone = models.resnet50(pretrained=True)
-        model_backbone.avgpool = nn.AdaptiveAvgPool2d((1,1))
-        self.model = model_backbone
-        self.num_client = len(num_ids_client)
-
-        self.classifier = []
-        for i in range(len(num_ids_client)):
-            name = 'classifier_'+str(i+1)
-            setattr(self, name, MLP_disentangle_exp(feat_dim, num_ids_client[i]))
-
-    def forward(self, x, idx_client=0):
-        x = self.model.conv1(x)
-        x = self.model.bn1(x)
-        x = self.model.relu(x)
-        x = self.model.maxpool(x)
-        x = self.model.layer1(x)
-        x = self.model.layer2(x)
-        x = self.model.layer3(x)
-        x = self.model.layer4(x)
-        x = self.model.avgpool(x)
-        x = x.view(x.size(0), x.size(1))
-
-        assert idx_client <= self.num_client-1
-        client_name = 'classifier_' + str(idx_client+1)
-        mapping_net = getattr(self, client_name)
-        x, global_r = mapping_net(x)
-        return x, global_r
-
-
-# Feature embedding network
-class embedding_disEN_net_glob(nn.Module):
-    def __init__(self, num_ids_client, feat_dim=2048):
-        super(embedding_disEN_net_glob, self).__init__()
-        model_backbone = models.resnet50(pretrained=True)
-        model_backbone.avgpool = nn.AdaptiveAvgPool2d((1,1))
-        self.model = model_backbone
-        self.num_client = len(num_ids_client)
-
-        self.classifier = []
-        for i in range(len(num_ids_client)):
-            name = 'classifier_'+str(i+1)
-            setattr(self, name, MLP_disentangle_glob(feat_dim, num_ids_client[i]))
-
-    def forward(self, x, idx_client=0):
-        x = self.model.conv1(x)
-        x = self.model.bn1(x)
-        x = self.model.relu(x)
-        x = self.model.maxpool(x)
-        x = self.model.layer1(x)
-        x = self.model.layer2(x)
-        x = self.model.layer3(x)
-        x = self.model.layer4(x)
-        x = self.model.avgpool(x)
-        x = x.view(x.size(0), x.size(1))
-
-        assert idx_client <= self.num_client-1
-        client_name = 'classifier_' + str(idx_client+1)
-        mapping_net = getattr(self, client_name)
-        x = mapping_net(x)
-        return x
-
+        # x = self.model.conv1(x)
+        # x = self.model.bn1(x)
+        # x = self.model.relu(x)
+        # x = self.model.maxpool(x)
+        # x = self.model.layer1(x)
+        # x = self.model.layer2(x)
+        # x = self.model.layer3(x)
+        # x = self.model.layer4(x)
+        # x = self.model.avgpool(x)
+        # x = x.view(x.size(0), x.size(1))
+        if self.model.training:
+            features, f4_useful, f3_useful, f2_useful, f1_useful, \
+            f4_useless, f3_useless, f2_useless, f1_useless, \
+            f4_IN, f3_IN, f2_IN, f1_IN, \
+            = self.model(x)
+            assert idx_client <= self.num_client-1
+            client_name = 'classifier_' + str(idx_client+1)
+            mapping_net = getattr(self, client_name)
+            outputs = mapping_net(features)
+            return outputs,features, f4_useful, f3_useful, f2_useful, f1_useful, \
+            f4_useless, f3_useless, f2_useless, f1_useless, \
+            f4_IN, f3_IN, f2_IN, f1_IN
+        else: # in evaluation mode
+            features = self.model(x)
+            assert idx_client <= self.num_client - 1
+            client_name = 'classifier_' + str(idx_client + 1)
+            mapping_net = getattr(self, client_name)
+            outputs = mapping_net(features)
+            return outputs
 # Feature embedding network for testing
 class embedding_net_test(nn.Module):
     def __init__(self, model):
@@ -256,4 +128,3 @@ class embedding_net_test(nn.Module):
         x = x.view(x.size(0), x.size(1)) # embedding feature representation
         return x
 
-    

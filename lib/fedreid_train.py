@@ -15,17 +15,22 @@ import os
 from utils.logging import Logger
 from lib.weightAgg import *
 from lib.localUpdate import LocalUpdateLM
+from torch.utils.tensorboard import SummaryWriter
+
 
 def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_val):
     # Model save directory
+
+    writer = SummaryWriter('runs/SNR' + time.strftime(".%m_%d_%H:%M:%S"))
+
     name = opt.name
     dir_name = os.path.join(opt.logs_dir, name)
     if not os.path.isdir(dir_name):
         os.mkdir(dir_name)
 
-    model_pth = 'model_{}_{}.pth'.format(opt.agg, opt.frac) # saved model
+    model_pth = 'model_{}'.format(opt.name)+ time.strftime(".%m_%d_%H:%M:%S") + '.pth' # saved model
     model_saved = os.path.join(dir_name, model_pth) # model directory
-    #sys.stdout = Logger(os.path.join(opt.logs_dir, 'log' + time.strftime(".%m_%d_%H:%M:%S") + '.txt')) # training log
+    sys.stdout = Logger(os.path.join(opt.logs_dir, 'log' + time.strftime(".%m_%d_%H:%M:%S") + '.txt')) # training log
 
     since = time.time() # training start time
     num_epochs = opt.global_ep # global communication epochs
@@ -48,6 +53,7 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
         for idx in idxs_users_selected:
             # local client model initialisation and local dataset partition
             # idxs: each local client only contains one user here
+
             local = LocalUpdateLM(args=opt, dataset=local_datasets[idx], idxs=dict_users[idx][0], nround=epoch, user=idx)
 
             # local client weight update
@@ -73,6 +79,35 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
             # store all local client parameters (some clients are not updated in the randomly selection)
             w_all[idx] = copy.deepcopy(out_dict['params'])
             w_tmp = [] # clear local temporal model parameters
+
+            # add loss
+            writer.add_scalar('result/client {} total id loss'.format(idx),
+                              out_dict['loss'],
+                              epoch)
+            writer.add_scalar('result/client {} KL loss'.format(idx),
+                              out_dict['KL_loss'],
+                              epoch)
+            writer.add_scalar('result/client {} accuracy'.format(idx),
+                              out_dict['acc'],
+                              epoch)
+            writer.add_scalar('result/client {} local_reid'.format(idx),
+                              out_dict['local_reid'],
+                              epoch)
+            writer.add_scalar('result/client {} local_SNR'.format(idx),
+                              out_dict['local_SNR'],
+                              epoch)
+            writer.add_scalar('result/client {} local_loss'.format(idx),
+                              out_dict['local_loss'],
+                              epoch)
+            writer.add_scalar('result/client {} server_reid'.format(idx),
+                              out_dict['server_reid'],
+                              epoch)
+            writer.add_scalar('result/client {} server_SNR'.format(idx),
+                              out_dict['server_SNR'],
+                              epoch)
+            writer.add_scalar('result/client {} server_loss'.format(idx),
+                              out_dict['server_loss'],
+                              epoch)
 
         # central server model updating 
         if opt.agg == 'avg': # current version  only supports modified federated average strategy
