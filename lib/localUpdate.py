@@ -118,12 +118,13 @@ class LocalUpdateLM(object):
 
                 # compute loss
                 _, preds = torch.max(outputs.data, 1)
-                loss = self.criterion_ce(outputs, labels) # local model loss
+                loss_l = self.criterion_ce(outputs, labels) # local model loss
                 loss_sv = self.criterion_ce(outputs_sv, labels) # copy central model loss
                 loss_kl = self.criterion_kl(outputs, outputs_sv, T=self.args.T) # server supervision loss
 
-                loss = loss + loss_sv + loss_kl # optimisation objective
-
+                loss = loss_l + loss_sv + loss_kl # optimisation objective
+		
+                print('local,server,KL',loss_l,loss_sv,loss_kl)
                 # backward
                 loss.backward()
                 optimizer.step()

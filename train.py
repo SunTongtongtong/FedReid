@@ -13,8 +13,8 @@ from lib.model import embedding_net,embedding_disEN_net,embedding_disEN_net_glob
 from config import opt
 from utils.get_dataset import get_dataset
 from lib.fedreid_train import FedReID_train
-from lib.fedreid_pbt_train import FedReID_pbt_train
-from lib.fedreid_disEN_train import FedReID_disEN_train
+#from lib.fedreid_pbt_train import FedReID_pbt_train
+#from lib.fedreid_disEN_train import FedReID_disEN_train
 
 
 
