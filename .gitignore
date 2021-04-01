@@ -11,6 +11,8 @@ model_example/
 model_save/
 sourceDataset/
 targetDataset/
+runs/
+sftp-config.json
 
 # Distribution / packaging
 .Python

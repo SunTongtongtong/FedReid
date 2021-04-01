@@ -16,6 +16,8 @@ from utils.logging import Logger
 from lib.weightAgg import *
 from lib.localUpdate import LocalUpdateLM
 
+
+
 def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_val):
     # Model save directory
     name = opt.name
