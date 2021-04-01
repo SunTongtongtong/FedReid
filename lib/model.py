@@ -52,7 +52,7 @@ class MLP(nn.Module):
         self.classifier = classifier
 
     def forward(self, x):
-        print(x.shape)
+        #print(x.shape)
         x = self.add_block(x)
         x = self.classifier(x)
         return x
