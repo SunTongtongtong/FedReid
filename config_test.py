@@ -23,4 +23,7 @@ parser.add_argument('--name',default='FedReID', type=str, help='Model Name')
 parser.add_argument('--logs_dir', type=str, help='path of logs',
     default=os.path.join(os.path.dirname(os.path.abspath(__file__)),'model_save'))
 
+#shitong
+parser.add_argument('--model_name', type=str, help='model name end with pth',default='model_CRD2048.pth')
+
 opt = parser.parse_args()

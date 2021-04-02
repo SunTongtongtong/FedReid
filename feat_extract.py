@@ -14,6 +14,9 @@ from evaluation.get_id import get_id
 from evaluation.eval_feat_ext import eval_feat_ext#, fliplr
 from lib.model import embedding_net,embedding_disEN_net,embedding_disEN_net_glob
 
+
+from BN.bn_update import bn_update
+
 def main(opt):
     # Set GPU  
     str_ids = opt.gpu_ids.split(',')
@@ -33,6 +36,7 @@ def main(opt):
     print('----------Load testing data----------')
     image_datasets, dataloaders  = get_dataset(opt, is_training=False)
     print('Done.')
+    
 
     # Get camera and identity labels of gallery and query
     gallery_path = image_datasets['gallery'].imgs
@@ -44,17 +48,22 @@ def main(opt):
 
     print('----------Extracting features----------')
     # Model initialisation, we use four local client in current version (Duke, Market, MSMT, CUHK03)
-    # model = embedding_net([702, 751, 1041, 767])
-    model = embedding_disEN_net_glob([702, 751, 1041, 767])
+    model = embedding_net([702, 751, 1041, 767])
+    #model = embedding_disEN_net_glob([702, 751, 1041, 767])
     model = load_network(model, opt, gpu_ids) # Model restoration from saved model
     # Remove the mapping network and set to embedding feature extraction
     model = embedding_net_test(model)
 
+    if use_gpu:
+        model = model.cuda()
+    #shitong Batch normalization update
+    bn_update(dataloaders['gallery'],model)
+
+
     # Change to test mode
     model = model.eval()
 
-    if use_gpu:
-        model = model.cuda()
+
 
     # Extract feature
     gallery_feature = eval_feat_ext(model, dataloaders['gallery'])

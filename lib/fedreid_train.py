@@ -65,7 +65,8 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
             # local client model training, return model parameters and training loss
             out_dict = local.update_weights(model=copy.deepcopy(model), cur_epoch=epoch,
                                             idx_client=idx, model_sv=copy.deepcopy(model_sv))
-
+            import pdb
+            pdb.set_trace()
             # store updated local client parameters
             w_locals.append(copy.deepcopy(out_dict['params']))
             loss_locals.append(copy.deepcopy(out_dict['loss']))

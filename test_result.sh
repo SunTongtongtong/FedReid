@@ -2,6 +2,7 @@ MODEL_NAME=$1
 GPU_ID=$2
 #
 
+
 ## example: sh test_result.sh model_SNR.03_13_21:59:10.pth 0  change --name to model dir name
 CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py  --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/targetDataset/VIPeR/pytorch --frac 1.0
 echo 'VIPeR result'
