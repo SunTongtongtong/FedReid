@@ -14,8 +14,7 @@ from evaluation.get_id import get_id
 from evaluation.eval_feat_ext import eval_feat_ext#, fliplr
 from lib.model import embedding_net,embedding_disEN_net,embedding_disEN_net_glob
 
-
-from BN.bn_update import bn_update
+from BN.bn_update import bn_update,bn_update_late
 
 def main(opt):
     # Set GPU  
@@ -57,7 +56,9 @@ def main(opt):
     if use_gpu:
         model = model.cuda()
     #shitong Batch normalization update
-    bn_update(dataloaders['gallery'],model)
+    n = bn_update(dataloaders['query'],model)
+    bn_update_late(dataloaders['gallery'],model,n)
+
 
 
     # Change to test mode
