@@ -33,7 +33,7 @@ def main(opt):
 
     # Prepare local client datasets
     print('----------Load client datasets----------')
-    local_datasets, dict_users, dataloaders_val  = get_dataset(opt, is_training=True)
+    local_datasets, dict_users, dataloaders_val,dataloader_viper  = get_dataset(opt, is_training=True)
 
     num_ids_client = [] # number of training ids in each local client
     for i in range(opt.nusers):
@@ -46,12 +46,12 @@ def main(opt):
     if torch.cuda.is_available():
         model = model.cuda()
 
-    w_glob = model.cpu().state_dict() # weights of neurons
+    w_glob = model.state_dict() # weights of neurons
     print('Done')
 
     # Model training
     print('----------Training----------')
-    model = FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_val) # Central model
+    model = FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_val,dataloader_viper) # Central model
 
 if __name__ == '__main__':
     main(opt)

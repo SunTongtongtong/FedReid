@@ -45,6 +45,9 @@ def get_dataset(opt, is_training=True):
         dataloaders_val = {'val': torch.utils.data.DataLoader(datasets.ImageFolder(os.path.join(opt.data_dir_1, 'val'),
             data_transforms['val']), batch_size=opt.batchsize, shuffle=True, num_workers=8)}
 
+        dataloader_viper = {'val': torch.utils.data.DataLoader(datasets.ImageFolder(os.path.join(opt.data_dir_viper,'val'),
+            data_transforms['val']), batch_size=opt.batchsize, shuffle=True, num_workers=8)}
+
         # Federated client partition (each client can be partitioned into multiple local users)
         # Here, one user in each client
         dict_users = []
@@ -53,7 +56,7 @@ def get_dataset(opt, is_training=True):
         dict_users.append(partition(len_dataset=len(local_datasets[2]), num_users=1))
         dict_users.append(partition(len_dataset=len(local_datasets[3]), num_users=1))
 
-        return local_datasets, dict_users, dataloaders_val
+        return local_datasets, dict_users, dataloaders_val, dataloader_viper
 
     # load testing data
     else:

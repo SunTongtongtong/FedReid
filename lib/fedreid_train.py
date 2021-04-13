@@ -15,20 +15,25 @@ import os
 from utils.logging import Logger
 from lib.weightAgg import *
 from lib.localUpdate import LocalUpdateLM
+from torch.utils.tensorboard import SummaryWriter
+from utils.meters import AverageMeter
 
 
 
-def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_val):
+
+def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_val,dataloader_viper):
     # Model save directory
+   
+    writer = SummaryWriter('runs/{}'.format(opt.name) + time.strftime(".%m_%d_%H:%M:%S"))
+
     name = opt.name
     dir_name = os.path.join(opt.logs_dir, name)
     if not os.path.isdir(dir_name):
         os.mkdir(dir_name)
 
-    model_pth = opt.name+ time.strftime(".%m_%d_%H:%M:%S") +'.pth' # saved model
+    model_pth = 'model_{}'.format(opt.name)+ time.strftime(".%m_%d_%H:%M:%S") + '.pth' # saved model
     model_saved = os.path.join(dir_name, model_pth) # model directory
-    
-    sys.stdout = Logger(os.path.join(dir_name, 'log' + time.strftime(".%m_%d_%H:%M:%S") + '.txt')) # training log
+   # sys.stdout = Logger(os.path.join(opt.logs_dir, 'log' + time.strftime(".%m_%d_%H:%M:%S") + '.txt')) # training log
 
     since = time.time() # training start time
     num_epochs = opt.global_ep # global communication epochs
@@ -39,16 +44,21 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
     for i in range(opt.nusers+1):
         w_all.append(w_glob) # initial
 
+
+    loss_meter = AverageMeter('Total loss for selected clients', ':6.3f')
+
     # Training
     for epoch in range(num_epochs):
         print('Global Training Epoch {}/{}'.format(epoch+1, num_epochs))
 
-        w_locals, loss_locals, kl_loss_locals = [], [], [] # aggreated local model parameters and local loss
+        loss_meter.reset()
+        w_locals= []# aggreated local model parameters and local loss
 
         idxs_users_selected = np.random.choice(range(opt.nusers), m, replace=False) # randomly selected clients
 
         # local client model updating
         for idx in idxs_users_selected:
+            print('=====training global round {} for client {} =============='.format(epoch,idx))
             # local client model initialisation and local dataset partition
             # idxs: each local client only contains one user here
             local = LocalUpdateLM(args=opt, dataset=local_datasets[idx], idxs=dict_users[idx][0], nround=epoch, user=idx)
@@ -68,27 +78,54 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
 
             # store updated local client parameters
             w_locals.append(copy.deepcopy(out_dict['params']))
-            loss_locals.append(copy.deepcopy(out_dict['loss']))
+            loss_meter.update(out_dict['loss_meter'])
             #shitong
-
-            kl_loss_locals.append(copy.deepcopy(out_dict['KL_loss']))
 
             # store all local client parameters (some clients are not updated in the randomly selection)
             w_all[idx] = copy.deepcopy(out_dict['params'])
             w_tmp = [] # clear local temporal model parameters
+            writer.add_scalar('baseline/client {} total loss'.format(idx),
+                              out_dict['loss_meter'],
+                              epoch)
+            writer.add_scalar('baseline/client {} KL loss'.format(idx),
+                              out_dict['KL_loss'],
+                              epoch)
+            writer.add_scalar('baseline/client {} local_loss'.format(idx),
+                              out_dict['client_loss'],
+                              epoch)
+            writer.add_scalar('baseline/client {} server_loss'.format(idx),
+                              out_dict['server_loss'],
+                              epoch)
+            writer.add_scalar('baseline/client {} accuracy'.format(idx),
+                              out_dict['acc'],
+                              epoch)
 
         # central server model updating 
         if opt.agg == 'avg': # current version  only supports modified federated average strategy
-            w_glob = weights_aggregate(w_locals, opt.dp, opt.alpha_mu, idx_client=idxs_users_selected, is_local=False) #, kl_loss_locals = kl_loss_locals  central model parameter update
+            w_glob = weights_aggregate(w_locals, opt.dp, opt.alpha_mu, idx_client=idxs_users_selected, is_local=False)#  central model parameter update
         model.load_state_dict(w_glob)
 
         print('-' * 20)
-        print('All Client {} Loss: {:.4f}'.format('Training', sum(loss_locals) / len(loss_locals)))
+        print(str(loss_meter))
 
         # current model evaluation
-        val_loss, _ = local.evaluate(data_loader=dataloaders_val['val'], model=model)
-        print('Current Central Model Validattion Loss: {:.4f}'.format(val_loss))
+        vip_loss, vip_acc = local.evaluate(data_loader=dataloader_viper['val'], model=model)
+        print('Current Central Model VIPeR Loss: {:.4f}, Accuracy: {:.4f} '.format(vip_loss,vip_acc))
+        writer.add_scalar('baseline/server/VIPeR accuracy'.format(idx),
+                    vip_acc,
+                    epoch)
+        writer.add_scalar('baseline/server/VIPeR loss'.format(idx),
+                    vip_loss,
+                    epoch)
 
+        val_loss, val_acc = local.evaluate(data_loader=dataloaders_val['val'], model=model)
+        print('Current Central Model Validattion Loss: {:.4f}, Validation accuracy: {:.4f}'.format(val_loss,val_acc))
+        writer.add_scalar('baseline/server/Validation set accuracy'.format(idx),
+                    val_acc,
+                    epoch)
+        writer.add_scalar('baseline/server/Validation set loss'.format(idx),
+                    val_loss,
+                    epoch)
         # save the central server model with the best validation loss (the lowest validation loss)
         # Conditional updating in mapping network can lead to low acc but will not affect central model performance
         # as validation can stabilise the central model performance
