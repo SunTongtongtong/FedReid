@@ -68,6 +68,7 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
             # w_tmp.append(w_all[idx]) # local model parameters
           #  model.load_state_dict(weights_aggregate(w_tmp, opt.dp, opt.alpha_mu, idx_client=idx, is_local=True)) # local model parameter update
             model.load_state_dict(w_glob)
+ 
             # central model
             # model_sv = copy.deepcopy(model)
             # model_sv.load_state_dict(w_glob)

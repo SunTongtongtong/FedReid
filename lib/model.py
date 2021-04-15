@@ -8,6 +8,7 @@ from torchvision import models
 from torch.autograd import Variable
 from torch.nn import functional as F
 import torch
+from collections import OrderedDict
 
 # Weight initialisation
 def weights_init_kaiming(m):
@@ -33,14 +34,23 @@ class MLP(nn.Module):
     def __init__(self, input_dim, class_num, dropout=True, relu=True, num_bottleneck=512):
         super(MLP, self).__init__()
 
-        add_block = []
-        add_block += [nn.Linear(input_dim, num_bottleneck)] 
-        add_block += [nn.BatchNorm1d(num_bottleneck)]
-        if relu:
-            add_block += [nn.LeakyReLU(0.1)]
-        if dropout:
-            add_block += [nn.Dropout(p=0.5)]
-        add_block = nn.Sequential(*add_block)
+        # add_block = []
+        # add_block += [nn.Linear(input_dim, num_bottleneck)] 
+        # add_block += [nn.BatchNorm1d(num_bottleneck)]
+        # if relu:
+        #     add_block += [nn.LeakyReLU(0.1)]
+        # if dropout:
+        #     add_block += [nn.Dropout(p=0.5)]
+        # add_block = nn.Sequential(*add_block)
+        # add_block.apply(weights_init_kaiming)
+
+
+        add_block = nn.Sequential(OrderedDict([
+          ('fc1',nn.Linear(input_dim, num_bottleneck)),
+          ('bn1',nn.BatchNorm1d(num_bottleneck)),
+          ('leakReLU',nn.LeakyReLU(0.1)),
+          ('dropout',nn.Dropout(p=0.5))
+        ]))
         add_block.apply(weights_init_kaiming)
 
         classifier = []
@@ -50,6 +60,8 @@ class MLP(nn.Module):
 
         self.add_block = add_block
         self.classifier = classifier
+
+
 
     def forward(self, x):
         #print(x.shape)
