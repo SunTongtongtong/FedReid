@@ -6,15 +6,19 @@ from __future__ import print_function, division
 import torch
 import scipy.io
 
-from lib.model import embedding_net, embedding_net_test
+
 from utils.get_dataset import get_dataset
 from utils.load_network import load_network
+
 from config_test import opt
-from evaluation.get_id import get_id
+from lib.model import embedding_net, embedding_net_test
+
+from evaluation.get_id import get_id, get_id_cuhk_msmt
 from evaluation.eval_feat_ext import eval_feat_ext#, fliplr
-from lib.model import embedding_net,embedding_disEN_net,embedding_disEN_net_glob
+from lib.model import embedding_net
 
 def main(opt):
+
     # Set GPU  
     str_ids = opt.gpu_ids.split(',')
     gpu_ids = []
@@ -38,20 +42,27 @@ def main(opt):
     gallery_path = image_datasets['gallery'].imgs
     query_path = image_datasets['query'].imgs
 
-    gallery_cam, gallery_label = get_id(gallery_path)
-    query_cam, query_label = get_id(query_path)
+    # gallery_cam, gallery_label = get_id(gallery_path)
+    # query_cam, query_label = get_id(query_path)
 
+    if gallery_path[0][0].split('/')[-5] not in ['msmt17', 'cuhk03-np']:
+        gallery_cam, gallery_label = get_id(gallery_path)
+        query_cam, query_label = get_id(query_path)
+    else:
+        gallery_cam, gallery_label = get_id_cuhk_msmt(gallery_path)
+        query_cam, query_label = get_id_cuhk_msmt(query_path)
 
     print('----------Extracting features----------')
     # Model initialisation, we use four local client in current version (Duke, Market, MSMT, CUHK03)
     # model = embedding_net([702, 751, 1041, 767])
-    model = embedding_disEN_net_glob([702, 751, 1041, 767])
-    model = load_network(model, opt, gpu_ids) # Model restoration from saved model
+    model = embedding_net([702, 751, 1041, 767])
+    model = load_network(model, opt.model_name, gpu_ids) # Model restoration from saved model
     # Remove the mapping network and set to embedding feature extraction
     model = embedding_net_test(model)
 
     # Change to test mode
     model = model.eval()
+
 
     if use_gpu:
         model = model.cuda()

@@ -9,7 +9,7 @@ import torch
 import numpy as np
 import time
 
-from lib.model import embedding_net,embedding_disEN_net,embedding_disEN_net_glob
+from lib.model import embedding_net
 from config import opt
 from utils.get_dataset import get_dataset
 from lib.fedreid_train import FedReID_train
