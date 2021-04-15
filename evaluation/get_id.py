@@ -4,6 +4,7 @@
 
 import os
 
+
 def get_id(img_path):
     camera_id = []
     labels = []
@@ -21,25 +22,25 @@ def get_id(img_path):
     return camera_id, labels
 
 #for cuhk03-np and msmt17
-# def get_id(img_path):
-#     camera_id = []
-#     labels = []
-#
-#     for path, v in img_path:
-#         filename = os.path.basename(path)
-#         label = int(path.split('/')[-2])
-#         if label==-1:
-#             labels.append(-1)
-#         else:
-#             labels.append(label)
-#         if path.split('/')[-5] == 'msmt17':
-#             camera = filename.split('_')[2]
-#         elif path.split('/')[-5] == 'cuhk03-np':
-#             camera = filename.split('_')[-2]
-#         else:
-#             assert "Get id function not correct"
-#         camera_id.append(int(camera))
-#     return camera_id,labels
+def get_id_cuhk_msmt(img_path):
+    camera_id = []
+    labels = []
+
+    for path, v in img_path:
+        filename = os.path.basename(path)
+        label = int(path.split('/')[-2])
+        if label==-1:
+            labels.append(-1)
+        else:
+            labels.append(label)
+        if path.split('/')[-5] == 'msmt17':
+            camera = filename.split('_')[2]
+        elif path.split('/')[-5] == 'cuhk03-np':
+            camera = filename.split('_')[-2]
+        else:
+            assert "Get id function not correct"
+        camera_id.append(int(camera))
+    return camera_id,labels
 
 
 

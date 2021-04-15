@@ -21,7 +21,7 @@ def eval_feat_ext(model, dataloaders):
         img, label = data
         n, c, h, w = img.size()
         count += n
-        print('Process count:', count)
+       # print('Process count:', count)
 
         ff = torch.FloatTensor(n, 2048).zero_()
 

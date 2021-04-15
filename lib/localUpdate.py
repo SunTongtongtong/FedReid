@@ -43,21 +43,18 @@ class LocalUpdateLM(object):
         self.criterion_mse = nn.MSELoss()
 
     # updating local model parameters
-    def update_weights(self, model, cur_epoch, idx_client, model_sv):
+    def update_weights(self, model, cur_epoch, idx_client):
         # mapping network parameters
         # when local epoch > 1, the copy server model should also be updated shared the merit of mutual learning
         ignored_params = list(map(id, model.model.fc.parameters() )) + list(map(id, model.classifier_1.parameters() ))\
                             + list(map(id, model.classifier_2.parameters())) + list(map(id, model.classifier_3.parameters() ))\
                             + list(map(id, model.classifier_4.parameters()))
-        ignored_params_sv = list(map(id, model_sv.model.fc.parameters() )) + list(map(id, model_sv.classifier_1.parameters() ))\
-                            + list(map(id, model_sv.classifier_2.parameters())) + list(map(id, model_sv.classifier_3.parameters() ))\
-                            + list(map(id, model_sv.classifier_4.parameters()))
-
+       
 
         # feature embedding network parameters
         # shitong filter: first parameter: return True/False; filter will choose from the second parameter which satisfy the first
         base_params = filter(lambda p: id(p) not in ignored_params, model.parameters())
-        base_params_sv = filter(lambda p: id(p) not in ignored_params_sv, model_sv.parameters())
+       # base_params_sv = filter(lambda p: id(p) not in ignored_params_sv, model_sv.parameters())
 
         # optimiser setting
         # global LR sheduler, hyperparameters can be fine-tuned
@@ -72,27 +69,26 @@ class LocalUpdateLM(object):
              {'params': model.classifier_2.parameters(), 'lr': args.lr_init*10*decay_factor},
              {'params': model.classifier_3.parameters(), 'lr': args.lr_init*10*decay_factor},
              {'params': model.classifier_4.parameters(), 'lr': args.lr_init*10*decay_factor},
-             {'params': base_params_sv, 'lr': args.lr_init*decay_factor},
-             {'params': model_sv.model.fc.parameters(), 'lr': args.lr_init*10*decay_factor},
-             {'params': model_sv.classifier_1.parameters(), 'lr': args.lr_init*10*decay_factor},
-             {'params': model_sv.classifier_2.parameters(), 'lr': args.lr_init*10*decay_factor},
-             {'params': model_sv.classifier_3.parameters(), 'lr': args.lr_init*10*decay_factor},
-             {'params': model_sv.classifier_4.parameters(), 'lr': args.lr_init*10*decay_factor},
+            #  {'params': base_params_sv, 'lr': args.lr_init*decay_factor},
+            #  {'params': model_sv.model.fc.parameters(), 'lr': args.lr_init*10*decay_factor},
+            #  {'params': model_sv.classifier_1.parameters(), 'lr': args.lr_init*10*decay_factor},
+            #  {'params': model_sv.classifier_2.parameters(), 'lr': args.lr_init*10*decay_factor},
+            #  {'params': model_sv.classifier_3.parameters(), 'lr': args.lr_init*10*decay_factor},
+            #  {'params': model_sv.classifier_4.parameters(), 'lr': args.lr_init*10*decay_factor},
          ], weight_decay=5e-4, momentum=0.9, nesterov=True)
 
         # local LR scheduler
         scheduler = lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
 
         # train and update
-        KL_loss_list=[] #shitong
 
         #average meter
         batch_time = AverageMeter('Time', ':6.3f')
         data_time = AverageMeter('Data', ':6.3f')
 
         loss_meter = AverageMeter('Total loss', ':6.3f')
-        kl_meter = AverageMeter('KL loss', ':6.3f')
-        server_meter = AverageMeter('Server loss', ':6.3f')
+        # kl_meter = AverageMeter('KL loss', ':6.3f')
+        # server_meter = AverageMeter('Server loss', ':6.3f')
         client_meter = AverageMeter('client loss', ':6.3f')
 
 
@@ -100,17 +96,16 @@ class LocalUpdateLM(object):
             print('Local Training Epoch {}/{}'.format(epoch+1, self.args.local_ep))
             print('-' * 10)
 
-            model,model_sv = model.cuda(), model_sv.cuda()
+            model = model.cuda()
             model.train(True)
-            model_sv.train(True)
+           # model_sv.train(True)
 
-            running_loss, running_loss_sv = 0.0, 0.0
-            running_corrects, running_corrects_sv = 0.0, 0.0
+            running_loss = 0#, running_loss_sv = 0.0, 0.0
+            running_corrects = 0#, running_corrects_sv = 0.0, 0.0
             end = time.time()
 
             for data in tqdm(self.data_loader):
                 # get the inputs
-                start = time.time()
                 data_time.update(time.time() - end)
 
                 inputs, labels = data
@@ -129,23 +124,23 @@ class LocalUpdateLM(object):
 
                 # forward
                 outputs = model(inputs, idx_client)
-                outputs_sv = model_sv(inputs, idx_client)
+                # outputs_sv = model_sv(inputs, idx_client)
 
                 # compute loss
                 _, preds = torch.max(outputs.data, 1)
-                loss_l = self.criterion_ce(outputs, labels) # local model loss
-                loss_sv = self.criterion_ce(outputs_sv, labels) # copy central model loss
-                loss_kl = self.criterion_kl(outputs, outputs_sv, T=self.args.T) # server supervision loss
+                loss = self.criterion_ce(outputs, labels) # local model loss
+               # loss_sv = self.criterion_ce(outputs_sv, labels) # copy central model loss
+               # loss_kl = self.criterion_kl(outputs, outputs_sv, T=self.args.T) # server supervision loss
 
-                loss = loss_l + loss_sv + loss_kl # optimisation objective
+                #loss = loss_l #+ loss_sv + loss_kl # optimisation objective
                 
 	            # backward
                 loss.backward()
                 optimizer.step()
 
-                client_meter.update(loss_l)
-                server_meter.update(loss_sv)
-                kl_meter.update(loss_kl)
+                #client_meter.update(loss_l)
+                # server_meter.update(loss_sv)
+                # kl_meter.update(loss_kl)
                 loss_meter.update(loss)
 
                 # compute accuracy and loss of current batch
@@ -153,9 +148,9 @@ class LocalUpdateLM(object):
                 running_corrects += float(torch.sum(preds == labels.data))
 
                 #shitong
-                KL_loss_list.append(loss_kl.item())
-                batch_time.update(time.time() - start)
+                batch_time.update(time.time() - end)
                 end = time.time()
+                #print(str(batch_time),str(data_time),str(loss_meter)),
 
 
 
@@ -168,16 +163,12 @@ class LocalUpdateLM(object):
             print('-'*20)
             print('Local client {} Training Loss: {:.4f} Acc: {:.4f}'.format(
                 idx_client, epoch_loss, epoch_acc))
-            print(str(batch_time),str(data_time),str(loss_meter),str(kl_meter),str(server_meter),str(client_meter)),
            # print('loss meter and loss average(should be the similar)',loss_meter.avg,sum(list_loss) / len(list_loss))
 
 
         # return model parameters and training loss
         return{'params': model.state_dict(),
                'loss_meter': loss_meter.avg, 
-               'KL_loss': kl_meter.avg,
-               'server_loss':server_meter.avg,
-               'client_loss':client_meter.avg,
                'acc':epoch_acc}
 
         
@@ -204,10 +195,10 @@ class LocalUpdateLM(object):
             labels = Variable(labels.cuda())
             
             # forward
-            if disEN:
-                outputs = model(inputs,idx_client)
-            else:
-                outputs = model(inputs, idx_client)
+            # if disEN:
+            #     outputs = model(inputs,idx_client)
+            # else:
+            outputs = model(inputs, idx_client)
             # compute accuracy and loss of current batch
 
             _, preds = torch.max(outputs.data, 1)

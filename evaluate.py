@@ -27,7 +27,7 @@ gallery_feature = gallery_feature.cuda()
 CMC = torch.IntTensor(len(gallery_label)).zero_()
 ap = 0.0
 for i in range(len(query_label)):
-    print('Process count:', i)
+   # print('Process count:', i)
     ap_tmp, CMC_tmp = compute_acc(query_feature[i],query_label[i],query_cam[i],
                                     gallery_feature,gallery_label,gallery_cam)
     if CMC_tmp[0]==-1:
