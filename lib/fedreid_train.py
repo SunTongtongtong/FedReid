@@ -81,7 +81,7 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
 
         # central server model updating 
         if opt.agg == 'avg': # current version  only supports modified federated average strategy
-            w_glob,w_all = weights_aggregate(w_all,w_glob, opt.dp, opt.alpha_mu, is_local=False)#  central model parameter update
+            w_glob,w_all,w_avg = weights_aggregate(w_all,w_glob, opt.dp, opt.alpha_mu, is_local=False)#  central model parameter update
        # model.load_state_dict(w_glob) #shitong want to remove this line
         model.load_state_dict(w_all[0]) # try duke client model on duke val dataset; also on viper dataset
 
@@ -118,6 +118,7 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
                 'model_2': w_all[2],
                 'model_3': w_all[3],
                 'server_model': w_glob,
+                'avg_model':w_avg,
                  }, f)
         else:
             if not best_val_loss or val_loss < best_val_loss:
@@ -129,6 +130,7 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
                         'model_2': w_all[2],
                         'model_3': w_all[3],
                         'server_model': w_glob,
+                        'avg_model':w_avg,
                         }, f)
                 best_val_loss = val_loss
     # compute training time

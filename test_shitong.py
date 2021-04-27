@@ -44,7 +44,7 @@ def main():
     global args
 
     torch.manual_seed(args.seed)
-    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu_devices
+    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu_ids
     use_gpu = torch.cuda.is_available()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print('Using device ',device)

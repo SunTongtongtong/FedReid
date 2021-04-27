@@ -19,7 +19,7 @@ def load_network(network, save_path, gpu_ids):
     # network_sever = copy.deepcopy(network)
 
     with open(save_path, 'rb') as f:
-        network.load_state_dict(torch.load(f, map_location='cuda:%s'%gpu_ids[0])['model_0']) # map the model to the current GPU
+        network.load_state_dict(torch.load(f, map_location='cuda:%s'%gpu_ids[0])['model_3']) # map the model to the current GPU
     # with open(save_path, 'rb') as f:
     #     network1.load_state_dict(torch.load(f, map_location='cuda:%s'%gpu_ids[0])['model_1']) # map the model to the current GPU
     # with open(save_path, 'rb') as f:
