@@ -1,0 +1,45 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            // "program": "./test_tent.py", //"${file}",  // add file name here 
+            "program": "./train.py", //"${file}",  // add file name here 
+
+            "console": "integratedTerminal",
+            "env": { "CUDA_VISIBLE_DEVICES" : "1"},
+            "justMyCode": false,
+
+            // "args" : [
+            //         "--root",
+            //         "/homes/ss014/datasets/",
+            //         "--load-weight",
+            //         "/homes/ss014/projects/FedReID-master/model_save/FedBN_avgmodel_divfunc/model_FedBN_avgmodel_divfunc.04_24_10:17:08.pth",
+            //         "--evaluate",
+            //         "-s",
+            //         "market1501",
+            //         "-t",
+            //         "ilids",
+            //         "-f",
+            //         "market1501",
+            //         "--gpu_ids",
+            //         "3"
+            //     ]  
+            
+                "args" : [
+                    "--name",
+                    "debug",
+
+                ]  
+                
+            
+        }
+    ]
+}
+

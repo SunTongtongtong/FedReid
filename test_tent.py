@@ -15,6 +15,8 @@ import torch
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
 from torch.optim import lr_scheduler
+import torch.optim as optim
+
 
 from args import argument_parser, image_dataset_kwargs
 from torchreid.data_manager import ImageDataManager
@@ -35,6 +37,8 @@ from torch.nn import functional as F
 
 from lib.model import embedding_net, embedding_net_test
 from utils.load_network import load_network
+
+from tent import tent
 
 
 # global variables
@@ -77,23 +81,15 @@ def main():
         model = load_network(model, args.load_weights, args.gpu_devices) # Model restoration from saved model
         model = embedding_net_test(model)
         model = model.eval()
-        # full_model.classifier.classifier = nn.Sequential()
-        # model=full_model
+
+        model = tent.configure_model(model)
+        params, param_names = tent.collect_params(model)
+        optimizer = optim.Adam(params, lr=1e-3,betas=(0.9, 0.999),weight_decay=0.0)
+        tented_model = tent.Tent(model, optimizer)
+
+        model = tented_model
 
         print("Model size: {:.3f} M".format(count_num_param(model)))
-
-        # if args.load_weights and check_isfile(args.load_weights):
-        #     # load pretrained weights but ignore layers that don't match in size
-        #     checkpoint = torch.load(args.load_weights)
-
-        #     pretrain_dict = checkpoint
-        #     model_dict = model.state_dict()
-        #     #
-        #     pretrain_dict = {k: v for k, v in pretrain_dict.items() if k in model_dict and model_dict[k].size() == v.size()}
-        #     model_dict.update(pretrain_dict)
-        #     model.load_state_dict(model_dict)
-        #     model = model.eval()  #shitong add
-        #     print("Loaded pretrained weights from '{}'".format(args.load_weights))
 
         if use_gpu:
             model = nn.DataParallel(model).cuda()
@@ -107,7 +103,11 @@ def main():
                 galleryloader = testloader_dict[name]['gallery']
                 epoch = None
 
+                # used when I want to run tent for ten epochs
+                # for i in range(10):
+                #     rank1, map = test(model, queryloader, galleryloader, use_gpu, epoch, return_distmat=True)
                 rank1, map = test(model, queryloader, galleryloader, use_gpu, epoch, return_distmat=True)
+
                 rank1_list.append(rank1)
                 map_list.append(map)
 
@@ -119,48 +119,56 @@ def main():
 def test(model, queryloader, galleryloader, use_gpu, epoch, ranks=[1, 5, 10, 20], return_distmat=False):
     batch_time = AverageMeter()
 
-    model.eval()
+    # model.eval()
 
-    with torch.no_grad():
-        qf, q_pids, q_camids = [], [], []
-        for batch_idx, (imgs, pids, camids, img_paths) in enumerate(queryloader):
-            if use_gpu:
-                imgs = imgs.cuda()
+    # with torch.no_grad():
 
-            end = time.time()
-            features = model(imgs)
+    gf, g_pids, g_camids = [], [], []
+    for batch_idx, (imgs, pids, camids, _) in enumerate(galleryloader):
+        if use_gpu:
+            imgs = imgs.cuda()
 
-            batch_time.update(time.time() - end)
+        end = time.time()
+        model.is_query = False
+        features = model(imgs,is_query = False)
+        batch_time.update(time.time() - end)
 
-            features = features.data.cpu()
-            qf.append(features)
-            q_pids.extend(pids)
-            q_camids.extend(camids)
-        qf = torch.cat(qf, 0)
-        q_pids = np.asarray(q_pids)
-        q_camids = np.asarray(q_camids)
+        features = features.data.cpu()
+        gf.append(features)
+        g_pids.extend(pids)
+        g_camids.extend(camids)
+    gf = torch.cat(gf, 0)
+    g_pids = np.asarray(g_pids)
+    g_camids = np.asarray(g_camids)
 
-        print("Extracted features for query set, obtained {}-by-{} matrix".format(qf.size(0), qf.size(1)))
+    print("Extracted features for gallery set, obtained {}-by-{} matrix".format(gf.size(0), gf.size(1)))
 
-        gf, g_pids, g_camids = [], [], []
-        for batch_idx, (imgs, pids, camids, _) in enumerate(galleryloader):
-            if use_gpu:
-                imgs = imgs.cuda()
 
-            end = time.time()
-            features = model(imgs)
-            batch_time.update(time.time() - end)
+    qf, q_pids, q_camids = [], [], []
+    for batch_idx, (imgs, pids, camids, img_paths) in enumerate(queryloader):
+        if use_gpu:
+            imgs = imgs.cuda()
 
-            features = features.data.cpu()
-            gf.append(features)
-            g_pids.extend(pids)
-            g_camids.extend(camids)
-        gf = torch.cat(gf, 0)
-        g_pids = np.asarray(g_pids)
-        g_camids = np.asarray(g_camids)
+        end = time.time()
+        model.is_query = True
+        features = model(imgs,is_query = True)
 
-        print("Extracted features for gallery set, obtained {}-by-{} matrix".format(gf.size(0), gf.size(1)))
+        batch_time.update(time.time() - end)
 
+        features = features.data.cpu()
+        qf.append(features)
+        q_pids.extend(pids)
+        q_camids.extend(camids)
+    qf = torch.cat(qf, 0)
+    q_pids = np.asarray(q_pids)
+    q_camids = np.asarray(q_camids)
+
+    print("Extracted features for query set, obtained {}-by-{} matrix".format(qf.size(0), qf.size(1)))
+
+
+
+
+# from here above 
     print("==> BatchTime(s)/BatchSize(img): {:.3f}/{}".format(batch_time.avg, args.test_batch_size))
 
     m, n = qf.size(0), gf.size(0)

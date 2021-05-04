@@ -16,6 +16,10 @@ from lib.model import embedding_net, embedding_net_test
 from evaluation.get_id import get_id, get_id_cuhk_msmt
 from evaluation.eval_feat_ext import eval_feat_ext#, fliplr
 from lib.model import embedding_net
+import torch.optim as optim
+
+
+from tent import tent
 
 def main(opt):
 
@@ -63,13 +67,24 @@ def main(opt):
     # Change to test mode
     model = model.eval()
 
+    model = tent.configure_model(model)
+    params, param_names = tent.collect_params(model)
+    optimizer = optim.Adam(params, lr=1e-3,betas=(0.9, 0.999),weight_decay=0.0)
+    tented_model = tent.Tent(model, optimizer)
+    model = tented_model
+    
+
+    print('Im tented model')
 
     if use_gpu:
         model = model.cuda()
 
     # Extract feature
+    model.is_query = False
     gallery_feature = eval_feat_ext(model, dataloaders['gallery'])
     print('Done gallery.')
+    model.is_query = True
+
     query_feature = eval_feat_ext(model, dataloaders['query'])
     print('Done query.')
 
