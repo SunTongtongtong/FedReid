@@ -129,7 +129,6 @@ def test(model, queryloader, galleryloader, use_gpu, epoch, ranks=[1, 5, 10, 20]
             imgs = imgs.cuda()
 
         end = time.time()
-        model.is_query = False
         features = model(imgs,is_query = False)
         batch_time.update(time.time() - end)
 
@@ -143,6 +142,8 @@ def test(model, queryloader, galleryloader, use_gpu, epoch, ranks=[1, 5, 10, 20]
 
     print("Extracted features for gallery set, obtained {}-by-{} matrix".format(gf.size(0), gf.size(1)))
 
+    #shitong add to not use batch statistic in query
+    model.eval()
 
     qf, q_pids, q_camids = [], [], []
     for batch_idx, (imgs, pids, camids, img_paths) in enumerate(queryloader):
@@ -150,9 +151,8 @@ def test(model, queryloader, galleryloader, use_gpu, epoch, ranks=[1, 5, 10, 20]
             imgs = imgs.cuda()
 
         end = time.time()
-        model.is_query = True
-        features = model(imgs,is_query = True)
 
+        features = model(imgs,is_query = True)
         batch_time.update(time.time() - end)
 
         features = features.data.cpu()

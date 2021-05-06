@@ -91,6 +91,7 @@ class embedding_net(nn.Module):
 
     def forward(self, x, idx_client=0):
         x = self.model.conv1(x)
+ 
         x = self.model.bn1(x)
         x = self.model.relu(x)
         x = self.model.maxpool(x)

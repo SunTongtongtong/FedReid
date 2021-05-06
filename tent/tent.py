@@ -23,7 +23,9 @@ class Tent(nn.Module):
         self.model_state, self.optimizer_state = \
             copy_model_and_optimizer(self.model, self.optimizer)
 
-    def forward(self, x):
+    def forward(self, x,is_query):
+        self.is_query = is_query
+
         if self.episodic:
             self.reset()
 
@@ -111,9 +113,19 @@ def configure_model(model):
         if isinstance(m, nn.BatchNorm2d):
             m.requires_grad_(True)
             # force use of batch stats in train and eval modes
-            m.track_running_stats = False
-            m.running_mean = None
-            m.running_var = None
+            #shitong comment here
+ 
+            # m.track_running_stats = False
+            # m.running_mean = None
+            # m.running_var = None
+            # m.running_mean = torch.zeros_like(m.running_mean)
+            # m.running_var = torch.ones_like(m.running_var)
+            # import pdb
+            # pdb.set_trace()
+            #print(m.training)
+            m.track_running_stats = True
+            m.momentum = 0.3
+
     return model
 
 
