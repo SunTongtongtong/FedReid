@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader, Dataset
 import torch.optim as optim
 import torch.nn as nn
 from torch.autograd import Variable
-from torch.optim import lr_scheduler
+# from utils import StepLR
 from lib.kl_loss import KLLoss
 
 import time
@@ -16,6 +16,7 @@ from tqdm import tqdm
 import pdb
 from utils.meters import AverageMeter
 
+from SAM import SAM
 
 
 # local client dataset partition
@@ -59,26 +60,34 @@ class LocalUpdateLM(object):
         # optimiser setting
         # global LR sheduler, hyperparameters can be fine-tuned
         # lr_init: 0.01 for embedding network and 0.1 for mapping network
-        decay_factor = 1.0 if cur_epoch < 20 else 0.1
+        # decay_factor = 1.0 if cur_epoch < 20 else 0.1
        #shitong
         args=self.args
-        optimizer = optim.SGD([
+        base_optimizer = optim.SGD
+
+        if cur_epoch < args.global_ep * 3/10:
+            decay_factor = 1.0
+        elif cur_epoch < args.global_ep * 6/10:
+            decay_factor =  0.2
+        elif cur_epoch < args.global_ep * 8/10:
+            decay_factor =  0.2 ** 2
+        else:
+            decay_factor =  0.2 ** 3
+
+
+        optimizer = SAM([
              {'params': base_params, 'lr': args.lr_init*decay_factor},
              {'params': model.model.fc.parameters(), 'lr': args.lr_init*10*decay_factor},
              {'params': model.classifier_1.parameters(), 'lr': args.lr_init*10*decay_factor},
              {'params': model.classifier_2.parameters(), 'lr': args.lr_init*10*decay_factor},
              {'params': model.classifier_3.parameters(), 'lr': args.lr_init*10*decay_factor},
              {'params': model.classifier_4.parameters(), 'lr': args.lr_init*10*decay_factor},
-            #  {'params': base_params_sv, 'lr': args.lr_init*decay_factor},
-            #  {'params': model_sv.model.fc.parameters(), 'lr': args.lr_init*10*decay_factor},
-            #  {'params': model_sv.classifier_1.parameters(), 'lr': args.lr_init*10*decay_factor},
-            #  {'params': model_sv.classifier_2.parameters(), 'lr': args.lr_init*10*decay_factor},
-            #  {'params': model_sv.classifier_3.parameters(), 'lr': args.lr_init*10*decay_factor},
-            #  {'params': model_sv.classifier_4.parameters(), 'lr': args.lr_init*10*decay_factor},
-         ], weight_decay=5e-4, momentum=0.9, nesterov=True)
+         ], base_optimizer, rho=args.rho,  momentum=0.9, weight_decay=5e-4) #weight_decay=5e-4, momentum=0.9, nesterov=True)
+        
+        # scheduler = StepLR(optimizer, args.learning_rate, args.global_ep)
 
         # local LR scheduler
-        scheduler = lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
+        #scheduler = lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
 
         # train and update
 
@@ -87,8 +96,6 @@ class LocalUpdateLM(object):
         data_time = AverageMeter('Data', ':6.3f')
 
         loss_meter = AverageMeter('Total loss', ':6.3f')
-        # kl_meter = AverageMeter('KL loss', ':6.3f')
-        # server_meter = AverageMeter('Server loss', ':6.3f')
         client_meter = AverageMeter('client loss', ':6.3f')
 
 
@@ -98,7 +105,6 @@ class LocalUpdateLM(object):
 
             model = model.cuda()
             model.train(True)
-           # model_sv.train(True)
 
             running_loss = 0#, running_loss_sv = 0.0, 0.0
             running_corrects = 0#, running_corrects_sv = 0.0, 0.0
@@ -124,23 +130,19 @@ class LocalUpdateLM(object):
 
                 # forward
                 outputs = model(inputs, idx_client)
-                # outputs_sv = model_sv(inputs, idx_client)
 
                 # compute loss
                 _, preds = torch.max(outputs.data, 1)
                 loss = self.criterion_ce(outputs, labels) # local model loss
-               # loss_sv = self.criterion_ce(outputs_sv, labels) # copy central model loss
-               # loss_kl = self.criterion_kl(outputs, outputs_sv, T=self.args.T) # server supervision loss
 
-                #loss = loss_l #+ loss_sv + loss_kl # optimisation objective
                 
 	            # backward
                 loss.backward()
-                optimizer.step()
+                optimizer.first_step(zero_grad = True)
 
-                #client_meter.update(loss_l)
-                # server_meter.update(loss_sv)
-                # kl_meter.update(loss_kl)
+                self.criterion_ce(model(inputs,idx_client),labels).backward()
+                optimizer.second_step(zero_grad = True)
+
                 loss_meter.update(loss)
 
                 # compute accuracy and loss of current batch
@@ -150,15 +152,12 @@ class LocalUpdateLM(object):
                 #shitong
                 batch_time.update(time.time() - end)
                 end = time.time()
-                #print(str(batch_time),str(data_time),str(loss_meter)),
-
-
 
             # compute accuracy and loss of current epoch
             epoch_loss = running_loss / (len(self.data_loader)*self.args.batchsize)
             epoch_acc = running_corrects / (len(self.data_loader)*self.args.batchsize)
 
-            scheduler.step()
+            # scheduler.step(cur_epoch)
             
             print('-'*20)
             print('Local client {} Training Loss: {:.4f} Acc: {:.4f}'.format(

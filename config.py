@@ -41,5 +41,10 @@ parser.add_argument('--global_ep', type=int, default=100, help="number of global
 parser.add_argument('--T', type=int, default=3, help="temperature to control the softness of probability distributions")
 parser.add_argument('--alpha_mu', type=float, default=0.5, help="update momentum in local weight aggregation: alpha")
 
+#for SAM
+parser.add_argument("--rho", default=0.05, type=int, help="Rho parameter for SAM.")
+parser.add_argument("--learning_rate", default=0.1, type=float, help="Base learning rate at the start of the training.")
+
+
 
 opt = parser.parse_args()
