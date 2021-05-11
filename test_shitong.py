@@ -74,26 +74,34 @@ def main():
         #full_model = get_model(750, args.drop_rate, args.stride).to(device)
         model = embedding_net([702, 751, 1041, 767])
 
+       # model0,model1,model2,model3,model4 = load_network(model, args.load_weights, args.gpu_devices) # Model restoration from saved model
         model = load_network(model, args.load_weights, args.gpu_devices) # Model restoration from saved model
+        #model_list = [model0,model1,model2,model3]
         model = embedding_net_test(model)
         model = model.eval()
+        model = model.cuda()
+        # for idx,model_i in enumerate(model_list):
+        #     model_list[idx] = embedding_net_test(model_i)
+        #     model_list[idx] = model_list[idx].eval()
+        #     model_list[idx] = model_list[idx].cuda()
+
         # full_model.classifier.classifier = nn.Sequential()
         # model=full_model
 
         print("Model size: {:.3f} M".format(count_num_param(model)))
 
-        if args.load_weights and check_isfile(args.load_weights):
-            # load pretrained weights but ignore layers that don't match in size
-            checkpoint = torch.load(args.load_weights)
+        # if args.load_weights and check_isfile(args.load_weights):
+        #     # load pretrained weights but ignore layers that don't match in size
+        #     checkpoint = torch.load(args.load_weights)
 
-            pretrain_dict = checkpoint
-            model_dict = model.state_dict()
-            #
-            pretrain_dict = {k: v for k, v in pretrain_dict.items() if k in model_dict and model_dict[k].size() == v.size()}
-            model_dict.update(pretrain_dict)
-            model.load_state_dict(model_dict)
-            model = model.eval()  #shitong add
-            print("Loaded pretrained weights from '{}'".format(args.load_weights))
+        #     pretrain_dict = checkpoint
+        #     model_dict = model.state_dict()
+        #     #
+        #     pretrain_dict = {k: v for k, v in pretrain_dict.items() if k in model_dict and model_dict[k].size() == v.size()}
+        #     model_dict.update(pretrain_dict)
+        #     model.load_state_dict(model_dict)
+        #     model = model.eval()  #shitong add
+        #     print("Loaded pretrained weights from '{}'".format(args.load_weights))
 
         if use_gpu:
             model = nn.DataParallel(model).cuda()
@@ -116,10 +124,10 @@ def main():
     print('mAP:',sum(map_list)/len(map_list))
     return
 
-def test(model, queryloader, galleryloader, use_gpu, epoch, ranks=[1, 5, 10, 20], return_distmat=False):
+def test(model_list, queryloader, galleryloader, use_gpu, epoch, ranks=[1, 5, 10, 20], return_distmat=False):
     batch_time = AverageMeter()
 
-    model.eval()
+    # model.eval()
 
     with torch.no_grad():
         qf, q_pids, q_camids = [], [], []
@@ -128,8 +136,9 @@ def test(model, queryloader, galleryloader, use_gpu, epoch, ranks=[1, 5, 10, 20]
                 imgs = imgs.cuda()
 
             end = time.time()
-            features = model(imgs)
-
+            features = model_list(imgs)
+            #for model in model_list[1:]:
+                #features = torch.cat((features,model(imgs)),dim=1)  
             batch_time.update(time.time() - end)
 
             features = features.data.cpu()
@@ -148,7 +157,11 @@ def test(model, queryloader, galleryloader, use_gpu, epoch, ranks=[1, 5, 10, 20]
                 imgs = imgs.cuda()
 
             end = time.time()
-            features = model(imgs)
+            features = model_list(imgs)
+            # features = model_list[0](imgs)
+            # for model in model_list[1:]:
+            #     features = torch.cat((features,model(imgs)),dim=1)  
+            
             batch_time.update(time.time() - end)
 
             features = features.data.cpu()

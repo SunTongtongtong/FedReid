@@ -4,6 +4,7 @@
 
 import copy
 import torch
+import torch.nn as nn
 
 def weights_aggregate(models, w_glob, dp, alpha_mu, is_local, idx_client = [0,1,2,3],client_weights = 0.25):
     """
@@ -41,8 +42,11 @@ def weights_aggregate(models, w_glob, dp, alpha_mu, is_local, idx_client = [0,1,
                 temp += models[client_idx][key]
 
             temp = torch.div(temp, len(idx_client))
-            w_avg[key].data.copy_(temp)           
-            if 'bn' not in key:
+            w_avg[key].data.copy_(temp)   
+     
+            if 'bn' not in key and 'downsample.1' not in key:
+    
+            # if isinstance(w_glob[key], nn.BatchNorm2d):
                 w_glob[key].data.copy_(temp)
                 for client_idx in range(len(idx_client)):
                     models[client_idx][key].data.copy_(w_glob[key])
