@@ -69,12 +69,6 @@ class LocalUpdateLM(object):
              {'params': model.classifier_2.parameters(), 'lr': args.lr_init*10*decay_factor},
              {'params': model.classifier_3.parameters(), 'lr': args.lr_init*10*decay_factor},
              {'params': model.classifier_4.parameters(), 'lr': args.lr_init*10*decay_factor},
-            #  {'params': base_params_sv, 'lr': args.lr_init*decay_factor},
-            #  {'params': model_sv.model.fc.parameters(), 'lr': args.lr_init*10*decay_factor},
-            #  {'params': model_sv.classifier_1.parameters(), 'lr': args.lr_init*10*decay_factor},
-            #  {'params': model_sv.classifier_2.parameters(), 'lr': args.lr_init*10*decay_factor},
-            #  {'params': model_sv.classifier_3.parameters(), 'lr': args.lr_init*10*decay_factor},
-            #  {'params': model_sv.classifier_4.parameters(), 'lr': args.lr_init*10*decay_factor},
          ], weight_decay=5e-4, momentum=0.9, nesterov=True)
 
         # local LR scheduler
@@ -87,8 +81,6 @@ class LocalUpdateLM(object):
         data_time = AverageMeter('Data', ':6.3f')
 
         loss_meter = AverageMeter('Total loss', ':6.3f')
-        # kl_meter = AverageMeter('KL loss', ':6.3f')
-        # server_meter = AverageMeter('Server loss', ':6.3f')
         client_meter = AverageMeter('client loss', ':6.3f')
 
 
@@ -98,7 +90,6 @@ class LocalUpdateLM(object):
 
             model = model.cuda()
             model.train(True)
-           # model_sv.train(True)
 
             running_loss = 0#, running_loss_sv = 0.0, 0.0
             running_corrects = 0#, running_corrects_sv = 0.0, 0.0
@@ -111,10 +102,6 @@ class LocalUpdateLM(object):
                 inputs, labels = data
                 now_batch_size, c, h, w = inputs.shape
 
-                ## skip the last small batch
-                #if now_batch_size<self.args.batchsize:
-                #   continue
-
                 # wrap data in Variable
                 inputs = Variable(inputs.cuda())
                 labels = Variable(labels.cuda())
@@ -124,23 +111,16 @@ class LocalUpdateLM(object):
 
                 # forward
                 outputs = model(inputs, idx_client)
-                # outputs_sv = model_sv(inputs, idx_client)
 
                 # compute loss
                 _, preds = torch.max(outputs.data, 1)
                 loss = self.criterion_ce(outputs, labels) # local model loss
-               # loss_sv = self.criterion_ce(outputs_sv, labels) # copy central model loss
-               # loss_kl = self.criterion_kl(outputs, outputs_sv, T=self.args.T) # server supervision loss
-
-                #loss = loss_l #+ loss_sv + loss_kl # optimisation objective
-                
+               
 	            # backward
                 loss.backward()
                 optimizer.step()
 
-                #client_meter.update(loss_l)
-                # server_meter.update(loss_sv)
-                # kl_meter.update(loss_kl)
+
                 loss_meter.update(loss)
 
                 # compute accuracy and loss of current batch
@@ -150,7 +130,6 @@ class LocalUpdateLM(object):
                 #shitong
                 batch_time.update(time.time() - end)
                 end = time.time()
-                #print(str(batch_time),str(data_time),str(loss_meter)),
 
 
 
@@ -169,7 +148,8 @@ class LocalUpdateLM(object):
         # return model parameters and training loss
         return{'params': model.state_dict(),
                'loss_meter': loss_meter.avg, 
-               'acc':epoch_acc}
+               'acc':epoch_acc
+              }
 
         
     # evaluating current model
