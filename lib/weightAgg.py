@@ -36,14 +36,23 @@ def weights_aggregate(models, w_glob, dp, alpha_mu, is_local, idx_client = [0,1,
 
         else: # feature embedding network updating
             temp = torch.zeros_like(w_glob[key], dtype=torch.float32)
+            f_mask = torch.ones_like(w_glob[key], dtype=torch.bool)
+
             for client_idx in range(len(idx_client)):
-#                        temp += client_weights[client_idx] * models[client_idx].state_dict()[key]
-                #temp += client_weights * models[client_idx][key]
+                delta_idx = models[client_idx][key] - w_glob[key]
+                try: 
+                    f_mask = f_mask * (mask == delta_idx.ge(0))
+                    mask == delta_idx.ge(0) # can be delete 
+                except:
+                    mask = delta_idx.ge(0)
+
                 temp += models[client_idx][key]
 
-            temp = torch.div(temp, len(idx_client))
-            w_avg[key].data.copy_(temp)   
-     
+            temp = torch.div(temp, len(idx_client))  #shitong todo: change here, add mask
+            temp = temp*f_mask+ ~f_mask*w_glob[key]
+           # temp = temp*f_mask  # not time mask, keep false place unchanged 
+#add here, w_avg implement avg or not change 
+            w_avg[key].data.copy_(temp)     # w_avg means including bn, all the parameters are the average    
             if 'bn' not in key and 'downsample.1' not in key:
     
             # if isinstance(w_glob[key], nn.BatchNorm2d):
@@ -52,4 +61,7 @@ def weights_aggregate(models, w_glob, dp, alpha_mu, is_local, idx_client = [0,1,
                     models[client_idx][key].data.copy_(w_glob[key])
             #shitong comment here
                 #w_agg[k] = torch.div(w_agg[k], len(w)) + torch.mul(torch.randn(w_agg[k].shape), dp).type_as(w_agg[k])
+            del mask
+            del f_mask
+    
     return w_glob,models,w_avg
