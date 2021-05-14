@@ -44,11 +44,10 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
 
 
     loss_meter = AverageMeter('Total loss for selected clients', ':6.3f')
-
     # Training
     for epoch in range(num_epochs):
         print('Global Training Epoch {}/{}'.format(epoch+1, num_epochs))
-
+        do_mask = True if epoch >20 else False
         loss_meter.reset()
         idxs_users_selected = np.random.choice(range(opt.nusers), m, replace=False) # randomly selected clients
 
@@ -81,7 +80,7 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
 
         # central server model updating 
         if opt.agg == 'avg': # current version  only supports modified federated average strategy
-            w_glob,w_all,w_avg = weights_aggregate(w_all,w_glob, opt.dp, opt.alpha_mu, is_local=False)#  central model parameter update
+            w_glob,w_all,w_avg = weights_aggregate(w_all,w_glob, opt.dp, opt.alpha_mu, is_local=False,do_mask = do_mask)#  central model parameter update
        # model.load_state_dict(w_glob) #shitong want to remove this line
         model.load_state_dict(w_all[0]) # try duke client model on duke val dataset; also on viper dataset
 
