@@ -17,6 +17,8 @@ from evaluation.get_id import get_id, get_id_cuhk_msmt
 from evaluation.eval_feat_ext import eval_feat_ext#, fliplr
 from lib.model import embedding_net
 
+from adaBN import  bn_update 
+
 def main(opt):
 
     # Set GPU  
@@ -28,10 +30,11 @@ def main(opt):
             gpu_ids.append(id)
 
     # Set gpu ids
-    if len(gpu_ids)>0:
-        torch.cuda.set_device(gpu_ids[0])
+    # if len(gpu_ids)>0:
+    #     torch.cuda.set_device(gpu_ids[0])
 
     use_gpu = torch.cuda.is_available()
+    print('use gpu',use_gpu)
 
     # Load testing data
     print('----------Load testing data----------')
@@ -59,13 +62,11 @@ def main(opt):
     model = load_network(model, opt.model_name, gpu_ids) # Model restoration from saved model
     # Remove the mapping network and set to embedding feature extraction
     model = embedding_net_test(model)
+    model = model.cuda()
+    bn_update(model, dataloaders['gallery'])#,cumulative = not args.adabn_emv)
 
     # Change to test mode
     model = model.eval()
-
-
-    if use_gpu:
-        model = model.cuda()
 
     # Extract feature
     gallery_feature = eval_feat_ext(model, dataloaders['gallery'])

@@ -36,6 +36,8 @@ from torch.nn import functional as F
 from lib.model import embedding_net, embedding_net_test
 from utils.load_network import load_network
 
+from adaBN import bn_update
+
 
 # global variables
 parser = argument_parser()
@@ -78,30 +80,13 @@ def main():
         model = load_network(model, args.load_weights, args.gpu_devices) # Model restoration from saved model
         #model_list = [model0,model1,model2,model3]
         model = embedding_net_test(model)
-        model = model.eval()
+        
         model = model.cuda()
-        # for idx,model_i in enumerate(model_list):
-        #     model_list[idx] = embedding_net_test(model_i)
-        #     model_list[idx] = model_list[idx].eval()
-        #     model_list[idx] = model_list[idx].cuda()
+        print("args.target_names[0]",args.target_names[0])
+        bn_update(model, testloader_dict[args.target_names[0]]['gallery'])#,cumulative = not args.adabn_emv)
 
-        # full_model.classifier.classifier = nn.Sequential()
-        # model=full_model
-
+        model = model.eval()
         print("Model size: {:.3f} M".format(count_num_param(model)))
-
-        # if args.load_weights and check_isfile(args.load_weights):
-        #     # load pretrained weights but ignore layers that don't match in size
-        #     checkpoint = torch.load(args.load_weights)
-
-        #     pretrain_dict = checkpoint
-        #     model_dict = model.state_dict()
-        #     #
-        #     pretrain_dict = {k: v for k, v in pretrain_dict.items() if k in model_dict and model_dict[k].size() == v.size()}
-        #     model_dict.update(pretrain_dict)
-        #     model.load_state_dict(model_dict)
-        #     model = model.eval()  #shitong add
-        #     print("Loaded pretrained weights from '{}'".format(args.load_weights))
 
         if use_gpu:
             model = nn.DataParallel(model).cuda()

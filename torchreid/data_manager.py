@@ -99,6 +99,7 @@ class ImageDataManager(BaseDataManager):
         self.pin_memory = False  #shitong : bacause of limited memory when kd, so set false now.todo 
         global args
         
+        print('split id:',self.split_id)
 
         # Build train and test transform functions
         transform_train = build_transforms(self.height, self.width, is_train=True)
