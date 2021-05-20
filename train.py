@@ -1,9 +1,3 @@
-# 
-# Decentralised Person Re-Identification
-# Guile Wu and Shaogang Gong
-# 2020
-#
-# I can 
 from __future__ import print_function, division
 import torch
 import numpy as np
@@ -42,7 +36,8 @@ def main(opt):
     # Model initialisation
     model = embedding_net(num_ids_client)  #list length 4=> will build 4 model here=> actually one model with 4 fully connected layers
                                            # when forward: set an parameter to choose the fully connected layer
-
+    import pdb
+    pdb.set_trace()
     if torch.cuda.is_available():
         model = model.cuda()
 

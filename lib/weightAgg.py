@@ -43,7 +43,7 @@ def weights_aggregate(models, w_glob, dp, alpha_mu, is_local, idx_client = [0,1,
 
             temp = torch.div(temp, len(idx_client))
             w_avg[key].data.copy_(temp)   
-     
+
             if 'bn' not in key and 'downsample.1' not in key:
     
             # if isinstance(w_glob[key], nn.BatchNorm2d):

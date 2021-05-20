@@ -58,6 +58,8 @@ def main(opt):
     model = embedding_net([702, 751, 1041, 767])
     model = load_network(model, opt.model_name, gpu_ids) # Model restoration from saved model
     # Remove the mapping network and set to embedding feature extraction
+    # import pdb
+    # pdb.set_trace()
     model = embedding_net_test(model)
 
     # Change to test mode

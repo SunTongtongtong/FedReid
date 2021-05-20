@@ -28,9 +28,9 @@ def load_network(network, save_path, gpu_ids):
     #     network2.load_state_dict(torch.load(f, map_location='cuda:%s'%gpu_ids[0])['model_2']) # map the model to the current GPU
     # with open(save_path, 'rb') as f:
     #     network3.load_state_dict(torch.load(f, map_location='cuda:%s'%gpu_ids[0])['model_3']) # map the model to the current GPU
-    # import pdb
-    # pdb.set_trace()
-    # print('Im here')
+    import pdb
+    pdb.set_trace()
+    print('Im here')
 
     #return network0,network1,network2,network3,network
     return network
