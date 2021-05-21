@@ -13,7 +13,6 @@ from lib.kl_loss import KLLoss
 import time
 from tqdm import tqdm
 
-import pdb
 from utils.meters import AverageMeter
 
 
@@ -46,29 +45,27 @@ class LocalUpdateLM(object):
     def update_weights(self, model, cur_epoch, idx_client):
         # mapping network parameters
         # when local epoch > 1, the copy server model should also be updated shared the merit of mutual learning
-        ignored_params = list(map(id, model.model.fc.parameters() )) + list(map(id, model.classifier_1.parameters() ))\
-                            + list(map(id, model.classifier_2.parameters())) + list(map(id, model.classifier_3.parameters() ))\
-                            + list(map(id, model.classifier_4.parameters()))
-       
+
+        ignored_params = list(map(id, model.model.fc.parameters() )) + list(map(id, model.classifier.parameters() ))
+     
 
         # feature embedding network parameters
         # shitong filter: first parameter: return True/False; filter will choose from the second parameter which satisfy the first
         base_params = filter(lambda p: id(p) not in ignored_params, model.parameters())
-       # base_params_sv = filter(lambda p: id(p) not in ignored_params_sv, model_sv.parameters())
 
-        # optimiser setting
-        # global LR sheduler, hyperparameters can be fine-tuned
-        # lr_init: 0.01 for embedding network and 0.1 for mapping network
-        decay_factor = 1.0 if cur_epoch < 20 else 0.1
+        if cur_epoch < 40:
+            decay_factor = 1.0
+        elif cur_epoch<80:
+            decay_factor = 0.1
+        else: 
+            decay_factor = 0.01
        #shitong
         args=self.args
         optimizer = optim.SGD([
              {'params': base_params, 'lr': args.lr_init*decay_factor},
              {'params': model.model.fc.parameters(), 'lr': args.lr_init*10*decay_factor},
-             {'params': model.classifier_1.parameters(), 'lr': args.lr_init*10*decay_factor},
-             {'params': model.classifier_2.parameters(), 'lr': args.lr_init*10*decay_factor},
-             {'params': model.classifier_3.parameters(), 'lr': args.lr_init*10*decay_factor},
-             {'params': model.classifier_4.parameters(), 'lr': args.lr_init*10*decay_factor},
+             {'params': model.classifier.parameters(), 'lr': args.lr_init*10*decay_factor},
+            
             #  {'params': base_params_sv, 'lr': args.lr_init*decay_factor},
             #  {'params': model_sv.model.fc.parameters(), 'lr': args.lr_init*10*decay_factor},
             #  {'params': model_sv.classifier_1.parameters(), 'lr': args.lr_init*10*decay_factor},

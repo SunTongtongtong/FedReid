@@ -9,7 +9,7 @@ import torch
 import numpy as np
 import time
 
-from lib.model import embedding_net
+from lib.model import embedding_net,embedding_net_test
 from config import opt
 from utils.get_dataset import get_dataset
 from lib.fedreid_train import FedReID_train
@@ -40,18 +40,18 @@ def main(opt):
         num_ids_client.append(len(local_datasets[i].classes))
 
     # Model initialisation
-    model = embedding_net(num_ids_client)  #list length 4=> will build 4 model here=> actually one model with 4 fully connected layers
-                                           # when forward: set an parameter to choose the fully connected layer
+    models = []
+    for ids in num_ids_client:        
+        model_idx = embedding_net(ids).cuda()  #list length 4=> will build 4 model here=> actually one model with 4 fully connected layers
+        models.append(model_idx)                                   # when forward: set an parameter to choose the fully connected layer
 
-    if torch.cuda.is_available():
-        model = model.cuda()
 
-    w_glob = model.state_dict() # weights of neurons
+    w_glob = embedding_net_test(models[0]).state_dict() # weights of neurons
     print('Done')
 
     # Model training
     print('----------Training----------')
-    model = FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_val,dataloader_viper) # Central model
+    model = FedReID_train(models, w_glob, opt, local_datasets, dict_users, dataloaders_val,dataloader_viper) # Central model
 
 if __name__ == '__main__':
     main(opt)

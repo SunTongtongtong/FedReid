@@ -21,7 +21,7 @@ from utils.meters import AverageMeter
 
 
 
-def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_val,dataloader_viper):
+def FedReID_train(models, w_glob, opt, local_datasets, dict_users, dataloaders_val,dataloader_viper):
     # Model save directory
    
     writer = SummaryWriter('runs/{}'.format(opt.name) + time.strftime(".%m_%d_%H:%M:%S"))
@@ -33,7 +33,7 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
 
     model_pth = 'model_{}'.format(opt.name)+ time.strftime(".%m_%d_%H:%M:%S") + '.pth' # saved model
     model_saved = os.path.join(dir_name, model_pth) # model directory
-    sys.stdout = Logger(os.path.join(opt.logs_dir, 'log' + time.strftime(".%m_%d_%H:%M:%S") + '.txt')) # training log
+    # sys.stdout = Logger(os.path.join(opt.logs_dir, 'log' + time.strftime(".%m_%d_%H:%M:%S") + '.txt')) # training log
 
     since = time.time() # training start time
     num_epochs = opt.global_ep # global communication epochs
@@ -41,8 +41,8 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
     m = max(int(opt.frac * opt.nusers), 1) # selected client number in each global communication epoch (1 =< C*N <= N)
 
     w_all = []#, w_tmp = [], [] # all local model parameters and local temporal model parameters
-    for i in range(opt.nusers+1):
-        w_all.append(w_glob) # initial
+    for i in range(opt.nusers):
+        w_all.append(models[i].state_dict()) # initial
 
 
     loss_meter = AverageMeter('Total loss for selected clients', ':6.3f')
@@ -52,7 +52,6 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
         print('Global Training Epoch {}/{}'.format(epoch+1, num_epochs))
 
         loss_meter.reset()
-        w_locals= []# aggreated local model parameters and local loss
 
         idxs_users_selected = np.random.choice(range(opt.nusers), m, replace=False) # randomly selected clients
 
@@ -64,26 +63,18 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
             local = LocalUpdateLM(args=opt, dataset=local_datasets[idx], idxs=dict_users[idx][0], nround=epoch, user=idx)
 
             # local client weight update
-            # w_tmp.append(w_glob) # server model parameters
-            # w_tmp.append(w_all[idx]) # local model parameters
-          #  model.load_state_dict(weights_aggregate(w_tmp, opt.dp, opt.alpha_mu, idx_client=idx, is_local=True)) # local model parameter update
-            model.load_state_dict(w_glob)
-            # central model
-            # model_sv = copy.deepcopy(model)
-            # model_sv.load_state_dict(w_glob)
+   
+            models[idx].load_state_dict(w_all[idx])
 
             # local client model training, return model parameters and training loss
-            out_dict = local.update_weights(model=copy.deepcopy(model), cur_epoch=epoch,
-                                            idx_client=idx)
+            out_dict = local.update_weights(model=copy.deepcopy(models[idx]), cur_epoch=epoch,idx_client=idx)
 
             # store updated local client parameters
-            w_locals.append(copy.deepcopy(out_dict['params']))
             loss_meter.update(out_dict['loss_meter'])
             #shitong
 
             # store all local client parameters (some clients are not updated in the randomly selection)
             w_all[idx] = copy.deepcopy(out_dict['params'])
-            w_tmp = [] # clear local temporal model parameters
             writer.add_scalar('baseline/client {} total loss'.format(idx),
                               out_dict['loss_meter'],
                               epoch)
@@ -94,23 +85,14 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
 
         # central server model updating 
         if opt.agg == 'avg': # current version  only supports modified federated average strategy
-            w_glob = weights_aggregate(w_locals, opt.dp, opt.alpha_mu, idx_client=idxs_users_selected, is_local=False)#  central model parameter update
-        model.load_state_dict(w_glob) #shitong want to remove this line
+            w_glob,w_all = weights_aggregate(w_all, w_glob, idx_client=idxs_users_selected)#  central model parameter update
+        models[0].load_state_dict(w_all[0]) #shitong want to remove this line
 
         print('-' * 20)
         print(str(loss_meter))
 
         # current model evaluation
-        vip_loss, vip_acc = local.evaluate(data_loader=dataloader_viper['val'], model=model)
-        print('Current Central Model VIPeR Loss: {:.4f}, Accuracy: {:.4f} '.format(vip_loss,vip_acc))
-        writer.add_scalar('baseline/server/VIPeR accuracy'.format(idx),
-                    vip_acc,
-                    epoch)
-        writer.add_scalar('baseline/server/VIPeR loss'.format(idx),
-                    vip_loss,
-                    epoch)
-
-        val_loss, val_acc = local.evaluate(data_loader=dataloaders_val['val'], model=model)
+        val_loss, val_acc = local.evaluate(data_loader=dataloaders_val['val'], model=models[0])
         print('Current Central Model Validation Loss: {:.4f}, Validation accuracy: {:.4f}'.format(val_loss,val_acc))
         writer.add_scalar('baseline/server/Validation set accuracy'.format(idx),
                     val_acc,
@@ -121,17 +103,21 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
         # save the central server model with the best validation loss (the lowest validation loss)
         # Conditional updating in mapping network can lead to low acc but will not affect central model performance
         # as validation can stabilise the central model performance
-        if epoch < 0.7*num_epochs: # to stabilise the result, only save the model after 70% training epochs
+        # if epoch == num_epochs-1: # to stabilise the result, only save the model after 70% training epochs
+        if epoch == 0:#num_epochs-1: # to stabilise the result, only save the model after 70% training epochs
+
             with open(model_saved, 'wb') as f:
-                torch.save(model.state_dict(), f)
-        else:
-            if not best_val_loss or val_loss < best_val_loss:
-                with open(model_saved, 'wb') as f:
-                    torch.save(model.state_dict(), f)
-                best_val_loss = val_loss
+                # torch.save(w_glob, f)
+                torch.save({
+                'model_0': w_all[0],
+                'model_1': w_all[1],
+                'model_2': w_all[2],
+                'model_3': w_all[3],
+                'server_model': w_glob,
+                 }, f)
     # compute training time
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(
         time_elapsed // 60, time_elapsed % 60))
 
-    return model
+    return models

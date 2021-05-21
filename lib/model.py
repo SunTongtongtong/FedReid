@@ -70,12 +70,10 @@ class embedding_net(nn.Module):
         model_backbone = models.resnet50(pretrained=True)
         model_backbone.avgpool = nn.AdaptiveAvgPool2d((1,1))
         self.model = model_backbone
-        self.num_client = len(num_ids_client)
 
-        self.classifier = []
-        for i in range(len(num_ids_client)):
-            name = 'classifier_'+str(i+1)
-            setattr(self, name, MLP(feat_dim, num_ids_client[i]))
+        self.classifier =  MLP(feat_dim, num_ids_client)
+        # name = 'classifier_'+str(i+1)
+        # setattr(self, name, MLP(feat_dim, num_ids_client))
 
     def forward(self, x, idx_client=0):
         x = self.model.conv1(x)
@@ -88,12 +86,7 @@ class embedding_net(nn.Module):
         x = self.model.layer4(x)
         x = self.model.avgpool(x)
         x = x.view(x.size(0), x.size(1))
-
-        assert idx_client <= self.num_client-1
-        client_name = 'classifier_' + str(idx_client+1)
-        mapping_net = getattr(self, client_name)
-        x = mapping_net(x)
-
+        x = self.classifier(x)
         return x
 
 # Feature embedding network for testing
