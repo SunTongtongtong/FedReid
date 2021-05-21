@@ -24,17 +24,19 @@ def weights_aggregate(models, w_glob, dp, alpha_mu, is_local, idx_client = [0,1,
     w_avg = copy.deepcopy(w_glob)
     for key in w_glob.keys():
 
-        if key[0:11] == 'classifier_':
-            idx_map = int(key[11])-1
-            # aggregate all weights
-            for j in range(len(idx_client)):
-                if idx_client[j] == idx_map:
-                    w_glob[key] = models[j][key]
-                    w_avg[key] = models[j][key]
+        # if key[0:11] == 'classifier_':
+        #     idx_map = int(key[11])-1
+        #     # aggregate all weights
+        #     for j in range(len(idx_client)):
+        #         if idx_client[j] == idx_map:
+        #             w_glob[key] = models[j][key]
+        #             w_avg[key] = models[j][key]
 
-                    break # only update the client participates in the current aggregation
+        #             break # only update the client participates in the current aggregation
 
-        else: # feature embedding network updating
+        # else: # feature embedding network updating
+        if key[0:11] != 'classifier_':
+
             temp = torch.zeros_like(w_glob[key], dtype=torch.float32)
             for client_idx in range(len(idx_client)):
 #                        temp += client_weights[client_idx] * models[client_idx].state_dict()[key]
@@ -44,7 +46,7 @@ def weights_aggregate(models, w_glob, dp, alpha_mu, is_local, idx_client = [0,1,
             temp = torch.div(temp, len(idx_client))
             w_avg[key].data.copy_(temp)   
 
-            if 'bn' not in key and 'downsample.1' not in key:
+            if 'bn' not in key and 'downsample.1' not in key and 'conv1.1' not in key and 'conv1.4' not in key:
     
             # if isinstance(w_glob[key], nn.BatchNorm2d):
                 w_glob[key].data.copy_(temp)
