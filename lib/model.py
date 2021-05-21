@@ -83,8 +83,7 @@ class embedding_net(nn.Module):
         super(embedding_net, self).__init__()
         model_backbone = resnet50(pretrained=True)
         # model_backbone = models.resnet50(pretrained = True)、
-        import pdb
-        pdb.set_trace()
+
         model_backbone.avgpool = nn.AdaptiveAvgPool2d((1,1))
         self.model = model_backbone
         self.num_client = len(num_ids_client)

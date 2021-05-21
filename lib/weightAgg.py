@@ -21,6 +21,7 @@ def weights_aggregate(models, w_glob, dp, alpha_mu, is_local, idx_client = [0,1,
 
     client_weights = 0.25, average of four clients 
     """
+    bn_layer_list = ['conv1.1','conv1.4','bn','layer1.0.downsample.1','downsample.2']
     w_avg = copy.deepcopy(w_glob)
     for key in w_glob.keys():
 
@@ -46,8 +47,8 @@ def weights_aggregate(models, w_glob, dp, alpha_mu, is_local, idx_client = [0,1,
             temp = torch.div(temp, len(idx_client))
             w_avg[key].data.copy_(temp)   
 
-            if 'bn' not in key and 'downsample.1' not in key and 'conv1.1' not in key and 'conv1.4' not in key:
-    
+            if 'bn' not in key and 'layer1.0.downsample.1' not in key  \
+            and 'conv1.1' not in key and 'conv1.4' not in key and 'downsample.2' not in key:
             # if isinstance(w_glob[key], nn.BatchNorm2d):
                 w_glob[key].data.copy_(temp)
                 for client_idx in range(len(idx_client)):
