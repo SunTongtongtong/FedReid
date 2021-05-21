@@ -27,19 +27,19 @@ GPU_ID=$2
 # echo 'Duke result'
 # CUDA_VISIBLE_DEVICES=${GPU_ID} python evaluate.py
 # echo '--------------------------------------------'
-CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/sourceDataset/market1501/pytorch --frac 1.0
-echo 'market1501 result'
-CUDA_VISIBLE_DEVICES=${GPU_ID} python evaluate.py
+# CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/sourceDataset/market1501/pytorch --frac 1.0
+# echo 'market1501 result'
+# CUDA_VISIBLE_DEVICES=${GPU_ID} python evaluate.py
 # echo '--------------------------------------------'
 
 # CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/sourceDataset/cuhk03-np/pytorch --frac 1.0
 # echo 'cuhk03 result'
 # CUDA_VISIBLE_DEVICES=${GPU_ID} python evaluate.py
-# echo '--------------------------------------------'
+echo '--------------------------------------------'
 
-# CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/sourceDataset/msmt17/pytorch --frac 1.0
-# echo 'msmt result'
-# CUDA_VISIBLE_DEVICES=${GPU_ID} python evaluate.py
+CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/sourceDataset/msmt17/pytorch --frac 1.0
+echo 'msmt result'
+CUDA_VISIBLE_DEVICES=${GPU_ID} python evaluate.py
 echo '--------------------------------------------'
 
 
