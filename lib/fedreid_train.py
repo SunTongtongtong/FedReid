@@ -88,15 +88,6 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
         print('-' * 20)
         print(str(loss_meter))
 
-        # current model evaluation
-        # vip_loss, vip_acc = local.evaluate(data_loader=dataloader_viper['val'], model=model)
-        # print('Current Central Model VIPeR Loss: {:.4f}, Accuracy: {:.4f} '.format(vip_loss,vip_acc))
-        # writer.add_scalar('baseline/server/VIPeR accuracy'.format(idx),
-        #             vip_acc,
-        #             epoch)
-        # writer.add_scalar('baseline/server/VIPeR loss'.format(idx),
-        #             vip_loss,
-        #             epoch)
 
         val_loss, val_acc = local.evaluate(data_loader=dataloaders_val['val'], model=model)
         print('Current Central Model Validation Loss: {:.4f}, Validation accuracy: {:.4f}'.format(val_loss,val_acc))
@@ -120,19 +111,7 @@ def FedReID_train(model, w_glob, opt, local_datasets, dict_users, dataloaders_va
                 'server_model': w_glob,
                 'avg_model':w_avg,
                  }, f)
-        # else:
-        #     if not best_val_loss or val_loss < best_val_loss:
-        #         with open(model_saved, 'wb') as f:
-        #            # torch.save(model.state_dict(), f)
-        #               torch.save({
-        #                 'model_0': w_all[0],
-        #                 'model_1': w_all[1],
-        #                 'model_2': w_all[2],
-        #                 'model_3': w_all[3],
-        #                 'server_model': w_glob,
-        #                 'avg_model':w_avg,
-        #                 }, f)
-        #         best_val_loss = val_loss
+
     # compute training time
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(
