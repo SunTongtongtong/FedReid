@@ -25,14 +25,14 @@ def weights_aggregate(w_all,w_glob, idx_client):
             # central server use the average of selected local clients for aggregation
             # low kl loss-> low model weight
         temp = torch.zeros_like(w_glob[k], dtype=torch.float32)
-        for i in range(len(w_all)):
-            temp += w_all[i][k]
+        for i in range(len(idx_client)):
+            temp += w_all[idx_client[i]][k]
             # w_agg[k] = w_agg[k] + w_all[i][k] #* kl_weight[i]
-        # privacy protection with differential privacy
+        # privacy protection with differential privacy                                      
         temp = torch.div(temp, len(idx_client))
         w_glob[k].data.copy_(temp)   
-        for i in range(len(w_all)):
-            w_all[i][k].data.copy_(temp)
+        for i in range(len(idx_client)):
+            w_all[idx_client[i]][k].data.copy_(temp)
         #shitong comment here
         # w_agg[k] = torch.div(w_agg[k], len(w_all)) + torch.mul(torch.randn(w_agg[k].shape), dp).type_as(w_agg[k])
     return w_glob,w_all

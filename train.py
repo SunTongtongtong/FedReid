@@ -45,8 +45,8 @@ def main(opt):
         model_idx = embedding_net(ids).cuda()  #list length 4=> will build 4 model here=> actually one model with 4 fully connected layers
         models.append(model_idx)                                   # when forward: set an parameter to choose the fully connected layer
 
-
-    w_glob = embedding_net_test(models[0]).state_dict() # weights of neurons
+    glob_model = embedding_net(30).cuda()
+    w_glob = embedding_net_test(glob_model).state_dict() # weights of neurons
     print('Done')
 
     # Model training

@@ -15,7 +15,7 @@ import os
 from utils.logging import Logger
 from lib.weightAgg import *
 from lib.localUpdate import LocalUpdateLM
-from torch.utils.tensorboard import SummaryWriter
+# from torch.utils.tensorboard import SummaryWriter
 from utils.meters import AverageMeter
 
 
@@ -24,7 +24,7 @@ from utils.meters import AverageMeter
 def FedReID_train(models, w_glob, opt, local_datasets, dict_users, dataloaders_val,dataloader_viper):
     # Model save directory
    
-    writer = SummaryWriter('runs/{}'.format(opt.name) + time.strftime(".%m_%d_%H:%M:%S"))
+    # writer = SummaryWriter('runs/{}'.format(opt.name) + time.strftime(".%m_%d_%H:%M:%S"))
 
     name = opt.name
     dir_name = os.path.join(opt.logs_dir, name)
@@ -75,13 +75,13 @@ def FedReID_train(models, w_glob, opt, local_datasets, dict_users, dataloaders_v
 
             # store all local client parameters (some clients are not updated in the randomly selection)
             w_all[idx] = copy.deepcopy(out_dict['params'])
-            writer.add_scalar('baseline/client {} total loss'.format(idx),
-                              out_dict['loss_meter'],
-                              epoch)
+            # writer.add_scalar('baseline/client {} total loss'.format(idx),
+            #                   out_dict['loss_meter'],
+            #                   epoch)
            
-            writer.add_scalar('baseline/client {} accuracy'.format(idx),
-                              out_dict['acc'],
-                              epoch)
+            # writer.add_scalar('baseline/client {} accuracy'.format(idx),
+                            #   out_dict['acc'],
+                            #   epoch)
 
         # central server model updating 
         if opt.agg == 'avg': # current version  only supports modified federated average strategy
@@ -94,17 +94,17 @@ def FedReID_train(models, w_glob, opt, local_datasets, dict_users, dataloaders_v
         # current model evaluation
         val_loss, val_acc = local.evaluate(data_loader=dataloaders_val['val'], model=models[0])
         print('Current Central Model Validation Loss: {:.4f}, Validation accuracy: {:.4f}'.format(val_loss,val_acc))
-        writer.add_scalar('baseline/server/Validation set accuracy'.format(idx),
-                    val_acc,
-                    epoch)
-        writer.add_scalar('baseline/server/Validation set loss'.format(idx),
-                    val_loss,
-                    epoch)
+        # writer.add_scalar('baseline/server/Validation set accuracy'.format(idx),
+        #             val_acc,
+        #             epoch)
+        # writer.add_scalar('baseline/server/Validation set loss'.format(idx),
+        #             val_loss,
+        #             epoch)
         # save the central server model with the best validation loss (the lowest validation loss)
         # Conditional updating in mapping network can lead to low acc but will not affect central model performance
         # as validation can stabilise the central model performance
         # if epoch == num_epochs-1: # to stabilise the result, only save the model after 70% training epochs
-        if epoch == 0:#num_epochs-1: # to stabilise the result, only save the model after 70% training epochs
+        if epoch == num_epochs-1: # to stabilise the result, only save the model after 70% training epochs
 
             with open(model_saved, 'wb') as f:
                 # torch.save(w_glob, f)

@@ -65,13 +65,7 @@ class LocalUpdateLM(object):
              {'params': base_params, 'lr': args.lr_init*decay_factor},
              {'params': model.model.fc.parameters(), 'lr': args.lr_init*10*decay_factor},
              {'params': model.classifier.parameters(), 'lr': args.lr_init*10*decay_factor},
-            
-            #  {'params': base_params_sv, 'lr': args.lr_init*decay_factor},
-            #  {'params': model_sv.model.fc.parameters(), 'lr': args.lr_init*10*decay_factor},
-            #  {'params': model_sv.classifier_1.parameters(), 'lr': args.lr_init*10*decay_factor},
-            #  {'params': model_sv.classifier_2.parameters(), 'lr': args.lr_init*10*decay_factor},
-            #  {'params': model_sv.classifier_3.parameters(), 'lr': args.lr_init*10*decay_factor},
-            #  {'params': model_sv.classifier_4.parameters(), 'lr': args.lr_init*10*decay_factor},
+
          ], weight_decay=5e-4, momentum=0.9, nesterov=True)
 
         # local LR scheduler
