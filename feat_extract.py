@@ -40,30 +40,31 @@ def main(opt):
 
     # Load testing data
     print('----------Load testing data----------')
-
+    name = opt.test_data_dir.split('/')[6]
     if opt.test_data_dir.split('/')[5]=='10_split_targetDataset':
         print('on 10 splits small datasets')
-        name = opt.test_data_dir.split('/')[6]
         rank1_list = []
         mAP_list = []
         for i in range(1,11):
             old = str(i-1)
 
             opt.test_data_dir = opt.test_data_dir.replace('split-'+str(old),'split-'+str(i))
-            feat_extract()
+            feat_extract(name)
             rank1,mAP = evaluate()
             rank1_list.append(rank1)
             mAP_list.append(mAP)
         print('*********Result on '+name+'*********')
         print('10 splits of result on dataset {} is Rank1: {}, mAP {}'.format(name,sum(rank1_list)/len(rank1_list),sum(mAP_list)/len(mAP_list))) 
     else:
-        feat_extract()
-        evaluate()
+        feat_extract(name)
+        rank1,mAP = evaluate()
+        print('*********Result on '+name+'*********')
+        print('Large datasets on {} is Rank1: {}, mAP {}'.format(name,rank1,mAP) )
 
  
     # evaluate()
 
-def feat_extract():
+def feat_extract(name):
     image_datasets, dataloaders  = get_dataset(opt, is_training=False) #change opt test dir
     print('Done.')
 
@@ -84,10 +85,19 @@ def feat_extract():
     print('----------Extracting features----------')
     # Model initialisation, we use four local client in current version (Duke, Market, MSMT, CUHK03)
     # model = embedding_net([702, 751, 1041, 767])
-    model = embedding_net(751)
-    model = embedding_net_test(model)
+    num_class_dict = {'dukemtmc-reid':702,'market1501':751,'msmt17':1041,'cuhk03-np':767}
+    if name in ['dukemtmc-reid','market1501','msmt17','cuhk03-np']:
 
-    model = load_network(model, opt.model_name, gpu_ids) # Model restoration from saved model
+        model = embedding_net(num_class_dict[name],AN = opt.AN)
+        model = load_network(model, opt.model_name, gpu_ids,name) # Model restoration from saved model
+        model = embedding_net_test(model)
+
+    else:
+
+        model = embedding_net(751,AN=opt.AN)
+        model = embedding_net_test(model)
+
+        model = load_network(model, opt.model_name, gpu_ids,name) # Model restoration from saved model
 
     # Remove the mapping network and set to embedding feature extraction
     model = model.cuda()    

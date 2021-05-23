@@ -40,6 +40,7 @@ def main(opt):
         num_ids_client.append(len(local_datasets[i].classes))
 
     # Model initialisation
+
     models = []
     for ids in num_ids_client:        
         model_idx = embedding_net(ids).cuda()  #list length 4=> will build 4 model here=> actually one model with 4 fully connected layers
