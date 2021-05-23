@@ -19,22 +19,34 @@ def weights_aggregate(w_all,w_glob, idx_client):
     w[1]->local->expert
     """
 
+            # temp = torch.zeros_like(w_glob[key], dtype=torch.float32)
+            # for client_idx in range(len(idx_client)):
+            #     temp += models[client_idx][key]
+
+            # temp = torch.div(temp, len(idx_client))
+            # w_avg[key].data.copy_(temp)   
+
+            # if 'bn' not in key and 'downsample.1' not in key:
+    
+            #     w_glob[key].data.copy_(temp)
+            #     for client_idx in range(len(idx_client)):
+            #         models[client_idx][key].data.copy_(w_glob[key])
+
 
     for k in w_glob.keys(): 
         
             # central server use the average of selected local clients for aggregation
-            # low kl loss-> low model weight
         temp = torch.zeros_like(w_glob[k], dtype=torch.float32)
         for i in range(len(idx_client)):
             temp += w_all[idx_client[i]][k]
-            # w_agg[k] = w_agg[k] + w_all[i][k] #* kl_weight[i]
         # privacy protection with differential privacy                                      
         temp = torch.div(temp, len(idx_client))
         w_glob[k].data.copy_(temp)   
-        for i in range(len(idx_client)):
-            w_all[idx_client[i]][k].data.copy_(temp)
-        #shitong comment here
-        # w_agg[k] = torch.div(w_agg[k], len(w_all)) + torch.mul(torch.randn(w_agg[k].shape), dp).type_as(w_agg[k])
+        if 'bn' not in k and 'downsample.1' not in k:
+            for i in range(len(idx_client)):
+                w_all[idx_client[i]][k].data.copy_(temp)
+            #shitong comment here
+            # w_agg[k] = torch.div(w_agg[k], len(w_all)) + torch.mul(torch.randn(w_agg[k].shape), dp).type_as(w_agg[k])
     return w_glob,w_all
 
 

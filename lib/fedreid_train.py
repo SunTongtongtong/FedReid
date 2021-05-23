@@ -15,7 +15,7 @@ import os
 from utils.logging import Logger
 from lib.weightAgg import *
 from lib.localUpdate import LocalUpdateLM
-# from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 from utils.meters import AverageMeter
 
 
@@ -24,7 +24,7 @@ from utils.meters import AverageMeter
 def FedReID_train(models, w_glob, opt, local_datasets, dict_users, dataloaders_val,dataloader_viper):
     # Model save directory
    
-    # writer = SummaryWriter('runs/{}'.format(opt.name) + time.strftime(".%m_%d_%H:%M:%S"))
+    writer = SummaryWriter('runs/{}'.format(opt.name) + time.strftime(".%m_%d_%H:%M:%S"))
 
     name = opt.name
     dir_name = os.path.join(opt.logs_dir, name)
@@ -75,13 +75,13 @@ def FedReID_train(models, w_glob, opt, local_datasets, dict_users, dataloaders_v
 
             # store all local client parameters (some clients are not updated in the randomly selection)
             w_all[idx] = copy.deepcopy(out_dict['params'])
-            # writer.add_scalar('baseline/client {} total loss'.format(idx),
-            #                   out_dict['loss_meter'],
-            #                   epoch)
+            writer.add_scalar('baseline/client {} total loss'.format(idx),
+                              out_dict['loss_meter'],
+                              epoch)
            
-            # writer.add_scalar('baseline/client {} accuracy'.format(idx),
-                            #   out_dict['acc'],
-                            #   epoch)
+            writer.add_scalar('baseline/client {} accuracy'.format(idx),
+                              out_dict['acc'],
+                              epoch)
 
         # central server model updating 
         if opt.agg == 'avg': # current version  only supports modified federated average strategy
