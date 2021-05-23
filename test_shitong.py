@@ -36,7 +36,7 @@ from torch.nn import functional as F
 from lib.model import embedding_net, embedding_net_test
 from utils.load_network import load_network
 
-from adaBN import bn_update
+# from adaBN import bn_update
 
 
 # global variables
@@ -74,17 +74,17 @@ def main():
         print("Initializing model:")
 
         #full_model = get_model(750, args.drop_rate, args.stride).to(device)
-        model = embedding_net([702, 751, 1041, 767])
+        model = embedding_net(702)
+        model = embedding_net_test(model)
 
         model = load_network(model, args.load_weights, args.gpu_devices) # Model restoration from saved model
-        model = embedding_net_test(model)
 
         model = model.cuda()
         print("args.target_names[0]",args.target_names[0])
         # import pdb
         # pdb.set_trace()
         # print(model.state_dict().keys())
-        bn_update(model, testloader_dict[args.target_names[0]]['gallery'])#,cumulative = not args.adabn_emv)
+        # bn_update(model, testloader_dict[args.target_names[0]]['gallery'])#,cumulative = not args.adabn_emv)
 
         model = model.eval()
         # full_model.classifier.classifier = nn.Sequential()

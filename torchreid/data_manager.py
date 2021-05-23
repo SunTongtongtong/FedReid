@@ -237,21 +237,22 @@ class ImageDataManager(BaseDataManager):
                     pin_memory=self.pin_memory, drop_last=True
                 )
 
-        print("\n")
-        print("  **************** Summary ****************")
-        print("  train names      : {}".format(self.source_names))
-        print("  # train datasets : {}".format(len(self.source_names)))
-        print("  # train ids      : {}".format(self._num_train_pids))
-        print("  # train images   : {}".format(len(self.train)))
-        print("  # train cameras  : {}".format(self._num_train_cams))
-        print("  test names       : {}".format(self.target_names))
-        if args.Unsupervised_meta_finetune:
-            print("  finetune names   : {}".format(self.finetune_names))
-            print("  # finetune datasets : {}".format(len(self.finetune_names)))
-            print("  # finetune ids   : {}".format(self._num_finetune_pids))
-            print("  # finetune images   : {}".format(len(self.finetune)))
-            print("  # finetune cameras  : {}".format(self._num_finetune_cams))
-        print("  *****************************************")
+        #todo: shitong, can be removed in the future
+        # print("\n")
+        # print("  **************** Summary ****************")
+        # print("  train names      : {}".format(self.source_names))
+        # print("  # train datasets : {}".format(len(self.source_names)))
+        # print("  # train ids      : {}".format(self._num_train_pids))
+        # print("  # train images   : {}".format(len(self.train)))
+        # print("  # train cameras  : {}".format(self._num_train_cams))
+        # print("  test names       : {}".format(self.target_names))
+        # if args.Unsupervised_meta_finetune:
+        #     print("  finetune names   : {}".format(self.finetune_names))
+        #     print("  # finetune datasets : {}".format(len(self.finetune_names)))
+        #     print("  # finetune ids   : {}".format(self._num_finetune_pids))
+        #     print("  # finetune images   : {}".format(len(self.finetune)))
+        #     print("  # finetune cameras  : {}".format(self._num_finetune_cams))
+        # print("  *****************************************")
 
-        print("\n")
+        # print("\n")
 

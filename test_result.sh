@@ -3,11 +3,14 @@ GPU_ID=$2
 #
 # Guile method to evaluate, used to calculate 4 large datasets
 # example: sh test_result.sh model_SNR.03_13_21:59:10.pth 0  change --name to model dir name
-# CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py  --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/targetDataset/VIPeR/pytorch --frac 1.0
+# for i in 1 2 #3 4 5 6 7 8 9 10
+# do 
+# CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py  --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/10_split_targetDataset/VIPeR/split-0/pytorch --frac 1.0
 # echo 'VIPeR result'
 # CUDA_VISIBLE_DEVICES=${GPU_ID} python evaluate.py
 # echo '--------------------------------------------'
-# CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/targetDataset/QMUL-iLIDS/pytorch --frac 1.0
+# done
+CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/10_split_targetDataset/QMUL-iLIDS/split-0/pytorch --frac 1.0
 # echo 'QMUL result'
 # CUDA_VISIBLE_DEVICES=${GPU_ID} python evaluate.py
 # echo '--------------------------------------------'
@@ -19,7 +22,7 @@ GPU_ID=$2
 # echo 'CAVIAR result'
 # CUDA_VISIBLE_DEVICES=${GPU_ID} python evaluate.py
 # echo '--------------------------------------------'
-# CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/targetDataset/GRID/pytorch --frac 1.0
+CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/10_split_targetDataset/GRID/split-0/pytorch --frac 1.0
 # echo 'GRID result'
 # CUDA_VISIBLE_DEVICES=${GPU_ID} python evaluate.py
 # echo '--------------------------------------------'
@@ -27,20 +30,21 @@ GPU_ID=$2
 # echo 'Duke result'
 # CUDA_VISIBLE_DEVICES=${GPU_ID} python evaluate.py
 # echo '--------------------------------------------'
-CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/sourceDataset/market1501/pytorch --frac 1.0
-echo 'market1501 result'
-CUDA_VISIBLE_DEVICES=${GPU_ID} python evaluate.py
-echo '--------------------------------------------'
+# CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/sourceDataset/market1501/pytorch --frac 1.0
+# echo 'market1501 result'
+# CUDA_VISIBLE_DEVICES=${GPU_ID} python evaluate.py
+# echo '--------------------------------------------'
 
 # CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/sourceDataset/cuhk03-np/pytorch --frac 1.0
 # echo 'cuhk03 result'
 # CUDA_VISIBLE_DEVICES=${GPU_ID} python evaluate.py
-echo '--------------------------------------------'
+# echo '--------------------------------------------'
 
 # CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/sourceDataset/msmt17/pytorch --frac 1.0
 # echo 'msmt result'
 # CUDA_VISIBLE_DEVICES=${GPU_ID} python evaluate.py
-echo '--------------------------------------------'
+# echo '--------------------------------------------'
+CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/10_split_targetDataset/PRID/split-0/pytorch --frac 1.0
 
 
 #only for evaluating,on viper,

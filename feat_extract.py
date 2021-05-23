@@ -17,26 +17,54 @@ from evaluation.get_id import get_id, get_id_cuhk_msmt
 from evaluation.eval_feat_ext import eval_feat_ext#, fliplr
 from lib.model import embedding_net
 
+#shitong
+from evaluate import evaluate
+
+str_ids = opt.gpu_ids.split(',')
+gpu_ids = []
+for str_id in str_ids:
+    id = int(str_id)
+    if id >=0:
+        gpu_ids.append(id)
+
+# Set gpu ids
+if len(gpu_ids)>0:
+    torch.cuda.set_device(gpu_ids[0])
+
+use_gpu = torch.cuda.is_available()
 
 def main(opt):
 
     # Set GPU  
-    str_ids = opt.gpu_ids.split(',')
-    gpu_ids = []
-    for str_id in str_ids:
-        id = int(str_id)
-        if id >=0:
-            gpu_ids.append(id)
 
-    # Set gpu ids
-    if len(gpu_ids)>0:
-        torch.cuda.set_device(gpu_ids[0])
-
-    use_gpu = torch.cuda.is_available()
 
     # Load testing data
     print('----------Load testing data----------')
-    image_datasets, dataloaders  = get_dataset(opt, is_training=False)
+
+    if opt.test_data_dir.split('/')[5]=='10_split_targetDataset':
+        print('on 10 splits small datasets')
+        name = opt.test_data_dir.split('/')[6]
+        rank1_list = []
+        mAP_list = []
+        for i in range(1,11):
+            old = str(i-1)
+
+            opt.test_data_dir = opt.test_data_dir.replace('split-'+str(old),'split-'+str(i))
+            feat_extract()
+            rank1,mAP = evaluate()
+            rank1_list.append(rank1)
+            mAP_list.append(mAP)
+        print('*********Result on '+name+'*********')
+        print('10 splits of result on dataset {} is Rank1: {}, mAP {}'.format(name,sum(rank1_list)/len(rank1_list),sum(mAP_list)/len(mAP_list))) 
+    else:
+        feat_extract()
+        evaluate()
+
+ 
+    # evaluate()
+
+def feat_extract():
+    image_datasets, dataloaders  = get_dataset(opt, is_training=False) #change opt test dir
     print('Done.')
 
     # Get camera and identity labels of gallery and query
@@ -57,9 +85,9 @@ def main(opt):
     # Model initialisation, we use four local client in current version (Duke, Market, MSMT, CUHK03)
     # model = embedding_net([702, 751, 1041, 767])
     model = embedding_net(751)
+    model = embedding_net_test(model)
 
     model = load_network(model, opt.model_name, gpu_ids) # Model restoration from saved model
-    model = embedding_net_test(model)
 
     # Remove the mapping network and set to embedding feature extraction
     model = model.cuda()    
@@ -80,7 +108,6 @@ def main(opt):
               'query_f':query_feature.numpy(),'query_label':query_label,'query_cam':query_cam}
     scipy.io.savemat('result_feature.mat',result)
     print('Done.')
-
 
 if __name__ == '__main__':
     main(opt)
