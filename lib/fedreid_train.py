@@ -94,16 +94,7 @@ def FedReID_train(models, w_glob, opt, local_datasets, dict_users, dataloaders_v
         # current model evaluation
         val_loss, val_acc = local.evaluate(data_loader=dataloaders_val['val'], model=models[0])
         print('Current Central Model Validation Loss: {:.4f}, Validation accuracy: {:.4f}'.format(val_loss,val_acc))
-        # writer.add_scalar('baseline/server/Validation set accuracy'.format(idx),
-        #             val_acc,
-        #             epoch)
-        # writer.add_scalar('baseline/server/Validation set loss'.format(idx),
-        #             val_loss,
-        #             epoch)
-        # save the central server model with the best validation loss (the lowest validation loss)
-        # Conditional updating in mapping network can lead to low acc but will not affect central model performance
-        # as validation can stabilise the central model performance
-        # if epoch == num_epochs-1: # to stabilise the result, only save the model after 70% training epochs
+
         if epoch == num_epochs-1: # to stabilise the result, only save the model after 70% training epochs
 
             with open(model_saved, 'wb') as f:

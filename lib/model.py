@@ -9,6 +9,8 @@ from torch.autograd import Variable
 from torch.nn import functional as F
 import torch
 
+from .resnet50_AN import resnet50
+
 # Weight initialisation
 def weights_init_kaiming(m):
     classname = m.__class__.__name__
@@ -67,7 +69,9 @@ class MLP(nn.Module):
 class embedding_net(nn.Module):
     def __init__(self, num_ids_client, feat_dim=2048):
         super(embedding_net, self).__init__()
-        model_backbone = models.resnet50(pretrained=True)
+        # model_backbone = models.resnet50(pretrained=True)
+        model_backbone = resnet50(pretrained=True)
+
         model_backbone.avgpool = nn.AdaptiveAvgPool2d((1,1))
         self.model = model_backbone
 
