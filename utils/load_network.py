@@ -19,9 +19,11 @@ def load_network(network, save_path, gpu_ids,name):
     if name in name_model_dict.keys():
         with open(save_path, 'rb') as f:
             network.load_state_dict(torch.load(f, map_location='cuda:%s'%gpu_ids[0])[name_model_dict[name]]) # map the model to the current GPU
+        print('loading network weight from {}'.format(name_model_dict[name]))
         return network
     else:
         with open(save_path, 'rb') as f:
             network.load_state_dict(torch.load(f, map_location='cuda:%s'%gpu_ids[0])['server_model']) # map the model to the current GPU
+        # print('loading network weight from server model') # map the model to the curren    t GPU   
         return network
  
