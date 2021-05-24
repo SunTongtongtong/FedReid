@@ -42,7 +42,9 @@ def weights_aggregate(w_all,w_glob, idx_client):
         # privacy protection with differential privacy                                      
         temp = torch.div(temp, len(idx_client))
         w_glob[k].data.copy_(temp)   
-        if 'bn' not in k and 'downsample.1' not in k:
+        # if 'bn' not in k and 'downsample.1' not in k:   
+        if 'bn' not in k and 'layer1.0.downsample.1' not in k  \
+            and 'conv1.1' not in k and 'conv1.4' not in k and 'downsample.2' not in k:
             for i in range(len(idx_client)):
                 w_all[idx_client[i]][k].data.copy_(temp)
             #shitong comment here
