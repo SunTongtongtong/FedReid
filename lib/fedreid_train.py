@@ -40,10 +40,11 @@ def FedReID_train(models, w_glob, opt, local_datasets, dict_users, dataloaders_v
     best_val_loss = None # validation for stablising model performance
     m = max(int(opt.frac * opt.nusers), 1) # selected client number in each global communication epoch (1 =< C*N <= N)
 
-    w_all = []#, w_tmp = [], [] # all local model parameters and local temporal model parameters
+    w_ls = []#, w_tmp = [], [] # all local model parameters and local temporal model parameters
+    w_lg = []
     for i in range(opt.nusers):
-        w_all.append(models[i].state_dict()) # initial
-
+        w_ls.append(models[i].state_dict()) # initial
+        w_lg.append(copy.deepcopy(models[i].state_dict()))
 
     loss_meter = AverageMeter('Total loss for selected clients', ':6.3f')
 
@@ -64,17 +65,20 @@ def FedReID_train(models, w_glob, opt, local_datasets, dict_users, dataloaders_v
 
             # local client weight update
    
-            models[idx].load_state_dict(w_all[idx])
+            models[idx].load_state_dict(w_ls[idx])
+            model_lg = copy.deepcopy(models[idx])
+            model_lg.load_state_dict(w_lg[idx])
 
             # local client model training, return model parameters and training loss
-            out_dict = local.update_weights(model=copy.deepcopy(models[idx]), cur_epoch=epoch,idx_client=idx)
+            out_dict = local.update_weights(model_ls=copy.deepcopy(models[idx]), cur_epoch=epoch,idx_client=idx,model_lg =copy.deepcopy(model_lg) )
 
             # store updated local client parameters
             loss_meter.update(out_dict['loss_meter'])
             #shitong
 
             # store all local client parameters (some clients are not updated in the randomly selection)
-            w_all[idx] = copy.deepcopy(out_dict['params'])
+            w_ls[idx] = copy.deepcopy(out_dict['params_ls'])
+            w_lg[idx] = copy.deepcopy(out_dict['params_lg'])
             writer.add_scalar('baseline/client {} total loss'.format(idx),
                               out_dict['loss_meter'],
                               epoch)
@@ -85,8 +89,8 @@ def FedReID_train(models, w_glob, opt, local_datasets, dict_users, dataloaders_v
 
         # central server model updating 
         if opt.agg == 'avg': # current version  only supports modified federated average strategy
-            w_glob,w_all = weights_aggregate(w_all, w_glob, idx_client=idxs_users_selected)#  central model parameter update
-        models[0].load_state_dict(w_all[0]) #shitong want to remove this line
+            w_lg,w_ls,w_glob = weights_aggregate(w_lg,w_ls, w_glob, idx_client=idxs_users_selected)#  central model parameter update
+        models[0].load_state_dict(w_ls[0]) #shitong want to remove this line
 
         print('-' * 20)
         print(str(loss_meter))
@@ -100,11 +104,15 @@ def FedReID_train(models, w_glob, opt, local_datasets, dict_users, dataloaders_v
             with open(model_saved, 'wb') as f:
                 # torch.save(w_glob, f)
                 torch.save({
-                'model_0': w_all[0],
-                'model_1': w_all[1],
-                'model_2': w_all[2],
-                'model_3': w_all[3],
+                'model_0': w_ls[0],
+                'model_1': w_ls[1],
+                'model_2': w_ls[2],
+                'model_3': w_ls[3],
                 'server_model': w_glob,
+                'model_lg_0':w_lg[0],
+                'model_lg_1':w_lg[1],
+                'model_lg_2':w_lg[2],
+                'model_lg_3':w_lg[3],
                  }, f)
     # compute training time
     time_elapsed = time.time() - since

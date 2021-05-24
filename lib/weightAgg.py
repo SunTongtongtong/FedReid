@@ -5,7 +5,7 @@
 import copy
 import torch
 
-def weights_aggregate(w_all,w_glob, idx_client):
+def weights_aggregate(w_lg,w_ls,w_glob,idx_client):
     """
     w: client model parameters
     dp: differential privacy scale factor beta
@@ -19,26 +19,19 @@ def weights_aggregate(w_all,w_glob, idx_client):
     w[1]->local->expert
     """
 
-            # temp = torch.zeros_like(w_glob[key], dtype=torch.float32)
-            # for client_idx in range(len(idx_client)):
-            #     temp += models[client_idx][key]
-
-            # temp = torch.div(temp, len(idx_client))
-            # w_avg[key].data.copy_(temp)   
-
-            # if 'bn' not in key and 'downsample.1' not in key:
-    
-            #     w_glob[key].data.copy_(temp)
-            #     for client_idx in range(len(idx_client)):
-            #         models[client_idx][key].data.copy_(w_glob[key])
-
-
     for k in w_glob.keys(): 
         
             # central server use the average of selected local clients for aggregation
         temp = torch.zeros_like(w_glob[k], dtype=torch.float32)
-        for i in range(len(idx_client)):
-            temp += w_all[idx_client[i]][k]
+        # conv layers should from w_ls
+        if 'bn' not in k and 'layer1.0.downsample.1' not in k  \
+        and 'conv1.1' not in k and 'conv1.4' not in k and 'downsample.2' not in k:
+            for i in range(len(idx_client)):
+                temp += w_ls[idx_client[i]][k]        
+        #bn layers should from w_lg
+        else:
+            for i in range(len(idx_client)):
+                temp += w_lg[idx_client[i]][k]
         # privacy protection with differential privacy                                      
         temp = torch.div(temp, len(idx_client))
         w_glob[k].data.copy_(temp)   
@@ -46,9 +39,11 @@ def weights_aggregate(w_all,w_glob, idx_client):
         if 'bn' not in k and 'layer1.0.downsample.1' not in k  \
             and 'conv1.1' not in k and 'conv1.4' not in k and 'downsample.2' not in k:
             for i in range(len(idx_client)):
-                w_all[idx_client[i]][k].data.copy_(temp)
-            #shitong comment here
-            # w_agg[k] = torch.div(w_agg[k], len(w_all)) + torch.mul(torch.randn(w_agg[k].shape), dp).type_as(w_agg[k])
-    return w_glob,w_all
+                w_ls[idx_client[i]][k].data.copy_(temp)
+                w_lg[idx_client[i]][k].data.copy_(temp)
+        else:
+            for i in range(len(idx_client)):
+                w_lg[idx_client[i]][k].data.copy_(temp)        
+    return w_lg,w_ls,w_glob
 
 
