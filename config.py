@@ -9,7 +9,7 @@ import os
 # Options
 # --------
 parser = argparse.ArgumentParser(description='Training')
-parser.add_argument('--gpu_ids', default='0', type=str,help='GPU IDs: e.g. 0, 1, 2, ...')
+parser.add_argument('--gpu_ids', default='1', type=str,help='GPU IDs: e.g. 0, 1, 2, ...')
 parser.add_argument('--name',default='debug', type=str, help='Model Name')
 parser.add_argument('--logs_dir', type=str, help='path of logs',
     default=os.path.join(os.path.dirname(os.path.abspath(__file__)),'model_save'))

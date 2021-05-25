@@ -80,12 +80,12 @@ def FedReID_train(models, w_glob, opt, local_datasets, dict_users, dataloaders_v
             w_ls[idx] = copy.deepcopy(out_dict['params_ls'])
             w_lg[idx] = copy.deepcopy(out_dict['params_lg'])
             writer.add_scalar('baseline/client {} total loss'.format(idx),
-                              out_dict['loss_meter'],
-                              epoch)
+                               out_dict['loss_meter'],
+                               epoch)
            
             writer.add_scalar('baseline/client {} accuracy'.format(idx),
-                              out_dict['acc'],
-                              epoch)
+                               out_dict['acc'],
+                               epoch)
 
         # central server model updating 
         if opt.agg == 'avg': # current version  only supports modified federated average strategy

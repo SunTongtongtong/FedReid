@@ -4,7 +4,7 @@
 import torch.nn as nn
 from .operator_basic import FeatureNorm, MixtureBatchNorm2d, MixtureGroupNorm
 from .model_config import cfg
-from torch.hub import load_state_dict_from_url
+# from torch.hub import load_state_dict_from_url
 import torch
 
 
