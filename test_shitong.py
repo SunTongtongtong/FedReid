@@ -72,12 +72,27 @@ def main():
         trainloader, testloader_dict = dm.return_dataloaders()
 
         print("Initializing model:")
+        num_class_dict = {'dukemtmcreid':702,'market1501':751,'msmt17':1041,'cuhk03-np':767}
+        name = args.target_names[0]
+        # import pdb
+        # pdb.set_trace()
+        print('current target is datasets: ',name)
+
+        if name in ['dukemtmcreid','market1501','msmt17','cuhk03-np']:
+
+            model = embedding_net(num_class_dict[name])
+            model = load_network(model, args.load_weights, args.gpu_devices,name) # Model restoration from saved model
+            model = embedding_net_test(model)
+        else:
+            model = embedding_net(751)
+            model = embedding_net_test(model)
+            model = load_network(model, args.load_weights,args.gpu_devices,name) # Model restoration from saved model
 
         #full_model = get_model(750, args.drop_rate, args.stride).to(device)
-        model = embedding_net(702)
-        model = embedding_net_test(model)
+        # model = embedding_net(702)
+        # model = embedding_net_test(model)
 
-        model = load_network(model, args.load_weights, args.gpu_devices) # Model restoration from saved model
+        # model = load_network(model, args.load_weights, args.gpu_devices) # Model restoration from saved model
 
         model = model.cuda()
         print("args.target_names[0]",args.target_names[0])
