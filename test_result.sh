@@ -7,19 +7,19 @@ GPU_ID=$2
 # do 
 CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py  --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/10_split_targetDataset/VIPeR/split-0/pytorch --frac 1.0
 
-CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/10_split_targetDataset/QMUL-iLIDS/split-0/pytorch --frac 1.0
+# CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/10_split_targetDataset/QMUL-iLIDS/split-0/pytorch --frac 1.0
 
-CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/10_split_targetDataset/GRID/split-0/pytorch --frac 1.0
+# CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/10_split_targetDataset/GRID/split-0/pytorch --frac 1.0
 
-CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/10_split_targetDataset/PRID/split-0/pytorch --frac 1.0
+# CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/10_split_targetDataset/PRID/split-0/pytorch --frac 1.0
 
-CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/sourceDataset/dukemtmc-reid/pytorch --frac 1.0
+# CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/sourceDataset/dukemtmc-reid/pytorch --frac 1.0
 
-CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/sourceDataset/market1501/pytorch --frac 1.0
+# CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/sourceDataset/market1501/pytorch --frac 1.0
 
-CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/sourceDataset/cuhk03-np/pytorch --frac 1.0
+# CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/sourceDataset/cuhk03-np/pytorch --frac 1.0
 
-CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/sourceDataset/msmt17/pytorch --frac 1.0
+# CUDA_VISIBLE_DEVICES=${GPU_ID} python feat_extract.py --model_name ${MODEL_NAME} --test_data_dir /homes/ss014/projects/FedReID-master/sourceDataset/msmt17/pytorch --frac 1.0
 
 
 
