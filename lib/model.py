@@ -9,7 +9,8 @@ from torch.autograd import Variable
 from torch.nn import functional as F
 import torch
 
-from .resnet50_AN import resnet50
+# from .resnet50_AN import resnet50
+from .model_Gavin import resnet50
 
 # Weight initialisation
 def weights_init_kaiming(m):

@@ -24,8 +24,9 @@ def weights_aggregate(w_lg,w_ls,w_glob,idx_client):
             # central server use the average of selected local clients for aggregation
         temp = torch.zeros_like(w_glob[k], dtype=torch.float32)
         # conv layers should from w_ls
-        if 'bn' not in k and 'layer1.0.downsample.1' not in k  \
-        and 'conv1.1' not in k and 'conv1.4' not in k and 'downsample.2' not in k:
+        if 'bn' not in k and 'downsample.1' not in k: 
+        # if 'bn' not in k and 'layer1.0.downsample.1' not in k  \
+        # and 'conv1.1' not in k and 'conv1.4' not in k and 'downsample.2' not in k:
             for i in range(len(idx_client)):
                 temp += w_ls[idx_client[i]][k]        
         #bn layers should from w_lg
@@ -35,9 +36,9 @@ def weights_aggregate(w_lg,w_ls,w_glob,idx_client):
         # privacy protection with differential privacy                                      
         temp = torch.div(temp, len(idx_client))
         w_glob[k].data.copy_(temp)   
-        # if 'bn' not in k and 'downsample.1' not in k:   
-        if 'bn' not in k and 'layer1.0.downsample.1' not in k  \
-            and 'conv1.1' not in k and 'conv1.4' not in k and 'downsample.2' not in k:
+        if 'bn' not in k and 'downsample.1' not in k:   
+        # if 'bn' not in k and 'layer1.0.downsample.1' not in k  \
+        #     and 'conv1.1' not in k and 'conv1.4' not in k and 'downsample.2' not in k:
             for i in range(len(idx_client)):
                 w_ls[idx_client[i]][k].data.copy_(temp)
                 w_lg[idx_client[i]][k].data.copy_(temp)
