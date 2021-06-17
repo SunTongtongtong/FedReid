@@ -25,7 +25,6 @@ def FedReID_train(models, w_glob, opt, local_datasets, dict_users, dataloaders_v
     # Model save directory
    
     # writer = SummaryWriter('runs/{}'.format(opt.name) + time.strftime(".%m_%d_%H:%M:%S"))
-
     name = opt.name
     dir_name = os.path.join(opt.logs_dir, name)
     if not os.path.isdir(dir_name):
