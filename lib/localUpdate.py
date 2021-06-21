@@ -86,6 +86,7 @@ class LocalUpdateLM(object):
         for epoch in range(self.args.local_ep):
             print('Local Training Epoch {}/{}'.format(epoch+1, self.args.local_ep))
             print('-' * 10)
+            # print('local training epochs:',self.args.local_ep)
 
             model_ls,model_lg = model_ls.cuda(),model_lg.cuda()
             model_ls.train(True)
