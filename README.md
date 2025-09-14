@@ -26,122 +26,45 @@ Existing person re-identification (Re-ID) methods mostly follow a centralised le
 python data_to_llava.py --image_path train_set/ --prompt_path dataset/ --save_path train_ano/
 ``` -->
 
-### Download Dataset
-1. Download the datasets from the follow links:
-   
-**Camouflaged Object Detection Dataset**
-- **[COD10K](https://github.com/DengPingFan/SINet/)**
-- **[CAMO](https://drive.google.com/open?id=1h-OqZdwkuPhBvGcVAwmh0f1NGqlH_4B6)**
-- **[CHAMELEON](https://www.polsl.pl/rau6/datasets/)**
-2. Put it in ./data/.
-### Running GenSAM on CHAMELON Dataset with LLaVA1/LLaVA1.5
-1. When playing with LLaVA, this code was implemented with Python 3.8 and PyTorch 2.1.0. We recommend creating [virtualenv](https://virtualenv.pypa.io/) environment and installing all the dependencies, as follows:
-```bash
-# create virtual environment
-virtualenv GenSAM_LLaVA
-source GenSAM_LLaVA/bin/activate
-# prepare LLaVA
-git clone https://github.com/haotian-liu/LLaVA.git
-cd LLaVA
-pip install -e .
-cd ..
-# prepare SAM
-pip install git+https://github.com/facebookresearch/segment-anything.git
-wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
-pip install opencv-python imageio ftfy urllib3==1.26.6
+### 📊 Dataset Preparation
+
+
+#### 🔗 Step 1: Download Dataset Files
+
+#### 📁 Step 2: Organize Dataset Structure
+Organize the dataset with the following command:
 ```
-2. Our GenSAM is a training-free test-time adaptation approach, so you can play with it by running:
-```bash
-python main.py --config config/CHAMELEON_LLaVA1.5.yaml   ###LLaVA1.5
-python main.py --config config/CHAMELEON_LLaVA.yaml   ###LLaVA
-```
-if you want to visualize the output picture during test-time adaptation, you can running:
-```bash
-python main.py --config config/CHAMELEON_LLaVA1.5.yaml --visualization    ###LLaVA1.5
-python main.py --config config/CHAMELEON_LLaVA.yaml --visualization    ###LLaVA
-```
- ## Demo
- We further prepare a [jupyter notebook demo](https://github.com/jyLin8100/GenSAM/blob/main/demo_v1.ipynb) for visualization.
- 1. Complete the following steps in the shell before opening the jupyter notebook. \
- The virtualenv environment named GenSAM_LLaVA needs to be created first following [Quick Start](#running-gensam-on-chamelon-dataset-with-llava1llava15).
-```
-pip install notebook 
-pip install ipykernel ipywidgets
-python -m ipykernel install --user --name GenSAM_LLaVA
-```
- 2. Open demo_v1.ipynb and select the 'GenSAM_LLaVA' kernel in the running notebook.
- 
-
-
-
- ## TO-DO LIST
-- [x] Update datasets and implementation scripts
-- [ ] Keep incorporating more capabilities
-- [ ] Demo and Codes
-
-
-## Citation
-
-If you find our work useful in your research, please consider citing:
-
-```
-@inproceedings{hu2024relax,
-  title={Relax Image-Specific Prompt Requirement in SAM: A Single Generic Prompt for Segmenting Camouflaged Objects},
-  author={Hu, Jian and Lin, Jiayi and Gong, Shaogang and Cai, Weitong},
-  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
-  volume={38},
-  number={11},
-  pages={12511--12518},
-  year={2024}
-}
+python ./utils/prepare.py
 ```
 
-## :cupid: Acknowledgements
-
-- [Segment Anything](https://github.com/facebookresearch/segment-anything)
-- [LLaVA](https://github.com/haotian-liu/LLaVA)
-- [BLIP2](https://github.com/salesforce/LAVIS/tree/main/projects/blip2)
-- [CLIP Surgery](https://github.com/xmed-lab/CLIP_Surgery)
-
-
-
-
-
-
-
-
-
-
-
-
-# Official code for paper Decentralised Person Re-Identification with Selective Knowledge Aggregation
-
-## Usage
-# 1. Prepare datasets
+#### Example Structure
 ```
-1.1 Download the datasets to the folder 'sourceDataset' or 'targetDataset'
-    or change the dataset path in ./configuration/.
-    e.g. to ./sourceDataset/market1501
-1.2 python ./utils/prepare.py
+sourceDataset/
+└── market1501/
+    ├── query/
+    │   ├── 0001/
+    │   │   └── xxx.jpg
+    │   ├── 0002/
+    │   │   └── xxx.jpg
+    │   └── ...
+    └── gallery/
+        ├── 0001/
+        │   └── xxx.jpg
+        └── ...
 ```
-When you complete, your dataset is constructed as:
-    ./sourceDataset/market1501/python/query/
-                                    ....../0001/xxx.jpg
-                                    ....../0002/xxx.jpg
-    ./sourceDataset/market1501/python/gallery/
 
 
+### 2. Extract Feature Representation of Testing Data
 
-# 2. Extract Feature Representation of Testing Data
 ```
-2.1 Ensure the trained model is saved in ./model_save/FedReID (A trained model is saved in model_example)
-2.2 Change testing parameter setting in config_test.py
-2.3 python feat_extract.py
+python feat_extract.py
 ```
+Ensure the trained model is saved in ./model_save/FedReID (A trained model is saved in model_example)
+You can change testing parameter setting in config_test.py
 When you complete, you should find a xxx.mat file in the current directory
 
 
-# 3 Prepare ids of testing data based on the format of their name
+### 3 Prepare ids of testing data based on the format of their name
 ```
 In ./evaluation/get_id.py,
 (1) for testing on MSMT17, change Line19 'camera[0]' to 'camera[0:2]';
@@ -151,7 +74,7 @@ In ./evaluation/get_id.py,
 
 # 4. Testing/Evaluation
 ```
-4.1 python evaluate.py
+python evaluate.py
 ```
 When you complete, you should see the rank-1 accuracy and mAP results.
 Note, this is the simplified evaluation code, you can download the complete evaluation codes
@@ -167,11 +90,15 @@ https://kaiyangzhou.github.io/deep-person-reid/
 When you complete, you should find the model and the log in ./model_save/xxx/
 
 
-## Citation
-    @article{wu2020decentralised,
-      title={Decentralised Learning from Independent Multi-Domain Labels for Person Re-Identification},
-      author={Wu, Guile and Gong, Shaogang},
-      journal={arXiv preprint arXiv:2006.04150},
-      year={2020}
-    }
 
+## Citation
+
+If you find our work useful in your research, please consider citing:
+```
+@article{sun2021decentralised,
+  title={Decentralised person re-identification with selective knowledge aggregation},
+  author={Sun, Shitong and Wu, Guile and Gong, Shaogang},
+  journal={arXiv preprint arXiv:2110.11384},
+  year={2021}
+}
+```
