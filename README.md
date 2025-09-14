@@ -84,9 +84,10 @@ https://kaiyangzhou.github.io/deep-person-reid/
 
 
 # 5. Training (If you want to train the model again)
+Change training parameter setting in `config.py`
+
 ```
-2.1 Change training parameter setting in config.py
-2.2 python train.py
+python train.py
 ```
 When you complete, you should find the model and the log in ./model_save/xxx/
 
