@@ -66,10 +66,11 @@ When you complete, you should find a xxx.mat file in the current directory
 
 ### 3 Prepare ids of testing data based on the format of their name
 
-In ./evaluation/get_id.py,
-(1) for testing on MSMT17, change Line19 'camera[0]' to 'camera[0:2]';
-(2) for CUHK-SYSU person search testing, change Line19 'camera[0]' to 'camera[0:2]' and change Line12 'filename[0:4]' to 'filename[0:5]';
-(3) for other benchmarks, use Line19 'camera[0]' and Line12 'filename[0:4]'.
+In ./evaluation/get_id.py:
+
++  for testing on MSMT17, change Line19 `camera[0]' to `camera[0:2]';
++  for CUHK-SYSU person search testing, change Line19 `camera[0]' to `camera[0:2]' and change Line12 `filename[0:4]' to `filename[0:5]';
++  for other benchmarks, use Line19 `camera[0]' and Line12 `filename[0:4]'.
 
 
 # 4. Testing/Evaluation
