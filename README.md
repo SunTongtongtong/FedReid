@@ -1,4 +1,4 @@
-# FedReID for Decentralised Person Re-Identification
+# Official code for paper Decentralised Person Re-Identification with Selective Knowledge Aggregation
 
 ## Usage
 # 1. Prepare datasets
