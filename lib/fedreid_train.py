@@ -1,8 +1,3 @@
-# 
-# Federated person re-identification for decentralised model learning
-# Guile Wu and Shaogang Gong
-# 2020
-#
 
 from __future__ import print_function, division
 import torch
