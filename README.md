@@ -26,7 +26,7 @@ Existing person re-identification (Re-ID) methods mostly follow a centralised le
 python data_to_llava.py --image_path train_set/ --prompt_path dataset/ --save_path train_ano/
 ``` -->
 
-### 📊 Dataset Preparation
+### 1 📊 Dataset Preparation
 
 
 #### 🔗 Step 1: Download Dataset Files
@@ -73,7 +73,7 @@ In ./evaluation/get_id.py:
 +  for other benchmarks, use Line19 `camera[0]' and Line12 `filename[0:4]'.
 
 
-# 4. Testing/Evaluation
+### 4. Testing/Evaluation
 ```
 python evaluate.py
 ```
@@ -83,7 +83,7 @@ from Torchreid which supports Cython for evaluation and use format equation for 
 https://kaiyangzhou.github.io/deep-person-reid/
 
 
-# 5. Training (If you want to train the model again)
+### 5. Training (If you want to train the model again)
 Change training parameter setting in `config.py`
 
 ```
